@@ -1,5 +1,5 @@
 import joi from "joi";
-import { errorFunction } from "../../app/utils";
+import { errorFunction } from "../../app/config/utils";
 import { PlayerSchema } from "../models/Player";
 import { Game } from "../models/Game";
 

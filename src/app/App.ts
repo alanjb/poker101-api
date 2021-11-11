@@ -1,23 +1,17 @@
 import express from 'express';
 import logger from 'morgan';
 import cors from 'cors';
-import GameController from '../game/GameController';
-import {Game} from "../game/models/Game";
-import { Card } from "../game/models/Card";
-import { CARD_REGEX, errorFunction } from './utils';
-import { gameValidationMiddleware } from '../game/validation/GameValidation';
-import { User } from '../profile/models/User';
-import UserController from '../profile/UserController';
+import { initGameRoutes } from '../game/routes/routes';
+import { initProfileRoutes } from '../profile/routes/routes';
+import middleware from './middleware/middleware';
 
 // Creates and configures an Node web server. Prevents sub-typing of this class.
 class App {
 
-  // refs to Express instance and game controller objects
+  // ref to Express instance 
   private static app: express.Application;
-  private static gameController = new GameController();
-  private static userController = new UserController();
 
-  //Run configuration methods on the Express instance by building 
+  //Run configuration methods 
   public static buildApp() {
     console.log("Starting build...");
 
@@ -30,25 +24,27 @@ class App {
   }
 
   private static initExpress() {
-    console.log("Creating node application...");
+    console.log("Creating node server...");
     this.app = express();
   }
 
   // Configure Express middleware.
   private static initMiddleware(): void {
-    console.log("Initializing application middleware...");
+    console.log("Initializing server middleware...");
 
-    if (this.app) {
-      this.app.use(logger('dev'));
-      this.app.use(cors())
-      this.app.use(express.urlencoded({ extended: true }))
-      this.app.use(express.json());
-      this.app.use(function (req: any, res: any, next: any) {
-        res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-        res.header("Access-Control-Allow-Headers", "Content-Type");
-        next();
-      });
+    if (!this.app) {
+      //log server creation error
     }
+
+    this.app.use(logger('dev'));
+    this.app.use(cors())
+    this.app.use(express.urlencoded({ extended: true }))
+    this.app.use(express.json());
+    this.app.use(function (req: any, res: any, next: any) {
+      res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+      res.header("Access-Control-Allow-Headers", "Content-Type");
+      next();
+    });
   }
 
   private static initDatabase() {
@@ -57,6 +53,20 @@ class App {
     const mongoDB = process.env.CONNECTION_STRING;
     const mongoose = require('mongoose');
     const db = mongoose.connection;
+
+    if (!mongoDB) {
+      //log m
+      throw new Error(
+        ".env is missing the definition of an AUTH0_AUDIENCE environmental variable"
+    );
+    }
+
+    if (!mongoose) {
+      //log m
+      throw new Error(
+        ".env is missing the definition of an AUTH0_AUDIENCE environmental variable"
+      );
+    }
     
     mongoose
       .connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -70,112 +80,17 @@ class App {
   }
 
   private static initRoutes() {
-    console.log("Initializing application routes...");
+    console.log("Initializing server routes...");
 
-    const { app, gameController } = this;
+    const { app } = this;
 
-    app.get('/', (req, res) => {
+    //test route
+    app.get('/', middleware, (req, res) => {
       res.send('swe681-game.net')
     });
 
-    app.get('/api', (req, res) => {
-      res.send('swe681-game.net/api')
-    });
-
-    app.post("/api/game/create", gameValidationMiddleware, (req: any, res: any) => {
-      try {
-        const newGame = new Game({
-          players: req.body.game.players,
-          requiredPointsPerPlayer: req.body.game.requiredPointsPerPlayer,
-          anteAmount: req.body.game.anteAmount
-        });
-
-        //randomized deck, set other parameters here
-        
-        return gameController
-          .create(newGame)
-          .then((game) => {
-            console.log("Success: Created new game...", game);
-            res.json({
-              isGameCreated: true,
-              game: game
-            })
-          })
-          .catch((error) => {
-            console.log("Error: Failed to create game...", error);
-            res.json({
-              isGameCreated: false
-            })
-          });
-        
-      } catch (error) {
-        res.status(403);
-				return res.json(errorFunction(true, "Error Creating User"));
-      }
-    });
-
-    app.delete("/api/player/deck/discard", (req: any, res: any) => {
-
-      try {
-      } catch (error) { }
-
-      const cardsToDiscard = req.body;
-
-      cardsToDiscard
-        .forEach(card => {
-          const cardType = card.face + ' of ' + card.suit;
-
-          if (cardType.match(CARD_REGEX)) {
-        
-            const cardToDiscard = new Card({id: card.id, face: card.face, suit: card.suit});
-
-            gameController
-              .discard(cardToDiscard)
-              .then(response => {
-                // console.log(response, 'discarded...')
-              })
-              .catch(error => {
-                console.log(error)
-              });
-          }
-          else {
-            console.log('ERROR! Regex match failed.')
-          }
-        })
-    });
-
-    // app.get("/api/user/user", (req: any, res: any) => {
-    //   try {
-    //     //check if email exists in DB
-    //     const user = new User({
-    //       email: req.body.email,
-    //     });
-
-    //     return userController
-    //     .create(newGame)
-    //     .then((game) => {
-    //       console.log("Success: Created new game...", game);
-    //       res.json({
-    //         isGameCreated: true,
-    //         game: game
-    //       })
-    //     })
-    //     .catch((error) => {
-    //       console.log("Error: Failed to create game...", error);
-    //       res.json({
-    //         isGameCreated: false
-    //       })
-    //     });
-
-
-
-    //     catch (error) {
-    //       res.status(403);
-    //       return res.json(errorFunction(true, "Error getting user"));
-    //     }
-    //   }
-
-    // });
+    initGameRoutes(app);
+    initProfileRoutes(app);
   }
 
   private static start() {

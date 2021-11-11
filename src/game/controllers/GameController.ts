@@ -1,4 +1,4 @@
-class GameController {
+export default class GameController {
   public create(game) {
     return game
       .save()
@@ -19,15 +19,11 @@ class GameController {
       .remove()
       .then((response) => {
         console.log("Database remove success - Card DISCARDED");
-
         return response;
       })
       .catch((response) => {
         console.log("Database save error - Card NOT DISCARDED");
-
         return response;
       }) 
   }
 }
-
-export default GameController;

@@ -24,13 +24,15 @@ mongoose
 npm 
 jest
 
-## To run the server
+## To run the server locally
 Run `npm run start` in root directory. The server will use http://localhost:8000/.
 
 ## API Methods 
 
 ### Game - /api/game
 - createGame()
+- getGame()
+- getGames()
 - check()
 - bet()
 - call()
@@ -50,6 +52,8 @@ Endpoint | Method | Description
 /api/profile/getUser | GET | Returns an existing user
 /api/profile/getUsers | GET | Returns an array of existing users
 /api/game/createGame | POST | Creates a new game 
+/api/game/getGame | GET | Returns an existing game
+/api/game/getGames | GET | Returns an array of existing games
 /api/game/check | POST | Player defers betting option. If at a later point a player bet, any player that has checked must then call, raise or fold
 /api/game/bet | POST | Player can add an amount to a pot
 /api/game/call | POST | Player adds the amount to the pot that the player before them bet. This is one of two possible responses to a bet

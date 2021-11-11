@@ -4,7 +4,6 @@ import https from 'https';
 import http from 'http';
 import fs from 'fs';
 
-
 //access to environment variables
 dotenv.config();
 
@@ -30,12 +29,6 @@ if (app) {
         server = http.createServer(app);
     } else if(ENVIRONMENT === 'PROD') {
         console.log('Creating HTTPS server for PROD...');
-
-        // const privateKey = fs.readFileSync('/etc/pki/tls/private/privkey.key', 'utf8');
-        // const certificate = fs.readFileSync('/etc/pki/tls/certs/custom.crt', 'utf8');
-        // const credentials = { key: privateKey, cert: certificate };
-    
-        // server = https.createServer(credentials, app);
     }
 
     if (server) {

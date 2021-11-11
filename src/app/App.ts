@@ -6,6 +6,8 @@ import {Game} from "../game/models/Game";
 import { Card } from "../game/models/Card";
 import { CARD_REGEX, errorFunction } from './utils';
 import { gameValidationMiddleware } from '../game/validation/GameValidation';
+import { User } from '../profile/models/User';
+import UserController from '../profile/UserController';
 
 // Creates and configures an Node web server. Prevents sub-typing of this class.
 class App {
@@ -13,6 +15,7 @@ class App {
   // refs to Express instance and game controller objects
   private static app: express.Application;
   private static gameController = new GameController();
+  private static userController = new UserController();
 
   //Run configuration methods on the Express instance by building 
   public static buildApp() {
@@ -79,17 +82,17 @@ class App {
       res.send('swe681-game.net/api')
     });
 
-    app.post("/api/game/create", gameValidationMiddleware, async (req: any, res: any) => {
+    app.post("/api/game/create", gameValidationMiddleware, (req: any, res: any) => {
       try {
         const newGame = new Game({
           players: req.body.game.players,
           requiredPointsPerPlayer: req.body.game.requiredPointsPerPlayer,
-          antiAmount: req.body.game.antiAmount
+          anteAmount: req.body.game.anteAmount
         });
 
         //randomized deck, set other parameters here
         
-        return await gameController
+        return gameController
           .create(newGame)
           .then((game) => {
             console.log("Success: Created new game...", game);
@@ -111,10 +114,14 @@ class App {
       }
     });
 
-    app.delete("/api/player/deck/discard", async (req: any, res: any) => {
+    app.delete("/api/player/deck/discard", (req: any, res: any) => {
+
+      try {
+      } catch (error) { }
+
       const cardsToDiscard = req.body;
 
-      await cardsToDiscard
+      cardsToDiscard
         .forEach(card => {
           const cardType = card.face + ' of ' + card.suit;
 
@@ -136,6 +143,39 @@ class App {
           }
         })
     });
+
+    // app.get("/api/user/user", (req: any, res: any) => {
+    //   try {
+    //     //check if email exists in DB
+    //     const user = new User({
+    //       email: req.body.email,
+    //     });
+
+    //     return userController
+    //     .create(newGame)
+    //     .then((game) => {
+    //       console.log("Success: Created new game...", game);
+    //       res.json({
+    //         isGameCreated: true,
+    //         game: game
+    //       })
+    //     })
+    //     .catch((error) => {
+    //       console.log("Error: Failed to create game...", error);
+    //       res.json({
+    //         isGameCreated: false
+    //       })
+    //     });
+
+
+
+    //     catch (error) {
+    //       res.status(403);
+    //       return res.json(errorFunction(true, "Error getting user"));
+    //     }
+    //   }
+
+    // });
   }
 
   private static start() {

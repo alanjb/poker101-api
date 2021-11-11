@@ -7,4 +7,4 @@ export const errorFunction = (errorBit, msg, data?) => {
   else {
     return { is_error: errorBit, message: msg, data };
   }
-};
+}

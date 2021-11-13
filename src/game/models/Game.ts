@@ -5,7 +5,8 @@ import { CardSchema } from "./Card";
 export const GameSchema = new Schema({
   id: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   pot: {
     type: Number,

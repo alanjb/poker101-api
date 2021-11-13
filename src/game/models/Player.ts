@@ -6,7 +6,8 @@ import { UserSchema } from "../../profile/models/User";
 export const PlayerSchema = new mongoose.Schema({
   id: {
     type: UserSchema,
-    required: true
+    required: true,
+    unique: true
   },
   folded: {
     type: Boolean,

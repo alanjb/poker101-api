@@ -3,7 +3,8 @@ import mongoose, { Schema } from "mongoose";
 export const CardSchema = new Schema({
   id: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   symbol: {
     type: String,

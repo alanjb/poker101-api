@@ -5,19 +5,54 @@ import { CardSchema } from "./Card";
 export const GameSchema = new Schema({
   id: {
     type: String,
+    required: true
   },
   pot: {
     type: Number,
+    min: 0,
 		trim: true,
+    required: true
   },
-  roundCount: Number,
-  status: String,
+  roundCount: {
+    type: Number,
+    min: 1,
+    max: 2,
+    required: true
+  },
+  status: {
+    type: String,
+    required: true,
+    enum: ["starting", "in progress", "complete", "aborted"]
+  },
   players: {
     type: [PlayerSchema],
+    validate: {
+      validator: function(v) {
+        return v => Array.isArray(v) && v.length >= 2 && v.length <= 6;
+      },
+      message: "Min: 2 Max: 6 Players"
+    }
   },
-  deck: [CardSchema],
-  requiredPointsPerPlayer: Number,
-  antiAmount: Number
+  deck: {
+    type: [CardSchema],
+    validate: {
+      validator: function(v) {
+        return v => Array.isArray(v) && v.length >= 0 && v.length <= 52;
+      },
+      message: "Min: 0 Max: 52 Players"
+    }
+  },
+  requiredPointsPerPlayer: {
+    type: Number,
+    min: 0,
+    required: true
+  },
+  anteAmount: {
+    type: Number,
+    min: 50,
+    max: 1000000,
+    required: true
+  }
 });
 
 export const Game = mongoose.model("Game", GameSchema);

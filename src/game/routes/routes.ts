@@ -13,22 +13,50 @@ export function initGameRoutes(app: express.Application) {
     
   });
 
-  app.post('/api/game/create', gameValidationMiddleware, (req: any, res: any) => {
-    const gameController = new GameController();
-
+  app.get('/api/game/games', (req: any, res: any) => {
     try {
+      const gameController = new GameController();
+
+      return gameController
+      .getAll()
+      .then((games) => {
+        console.log("Successfully retrieved all games..." + games);
+        res.json({
+          games: games
+        })
+      })
+      .catch((error) => {
+        console.log("Error: Failed to get games...", error);
+        res.json({
+          games: null
+        })
+      });
+      
+    } catch (error) {
+      res.status(403);
+      return res.json(errorFunction(true, "Error Creating User"));
+    }
+  });
+
+  app.post('/api/game/create', (req: any, res: any) => {
+    try {
+      const gameController = new GameController();
       const newGame = new Game({
-        players: req.body.game.players,
+        id: 1,
+        pot: 3000,
+        roundCount: 1,
+        status: 'starting',
         requiredPointsPerPlayer: req.body.game.requiredPointsPerPlayer,
         anteAmount: req.body.game.anteAmount
       });
+
+      console.log("newGame: " + newGame)
   
       //randomized deck, set other parameters here
-      
       return gameController
         .create(newGame)
         .then((game) => {
-          console.log("Success: Created new game...", game);
+          console.log("Game Successfully Created..." + game);
           res.json({
             isGameCreated: true,
             game: game
@@ -47,34 +75,34 @@ export function initGameRoutes(app: express.Application) {
     }
   });
   
-  app.delete('/api/game/discard', (req: any, res: any) => {
+  // app.delete('/api/game/discard', (req: any, res: any) => {
   
-    try {
-    } catch (error) { }
+  //   try {
+  //   } catch (error) { }
   
-    const cardsToDiscard = req.body;
-    const gameController = new GameController();
+  //   const cardsToDiscard = req.body;
+  //   const gameController = new GameController();
   
-    cardsToDiscard
-      .forEach(card => {
-        const cardType = card.face + ' of ' + card.suit;
+  //   cardsToDiscard
+  //     .forEach(card => {
+  //       const cardType = card.face + ' of ' + card.suit;
   
-        if (cardType.match(CARD_REGEX)) {
+  //       if (cardType.match(CARD_REGEX)) {
       
-          const cardToDiscard = new Card({id: card.id, face: card.face, suit: card.suit});
+  //         const cardToDiscard = new Card({id: card.id, face: card.face, suit: card.suit});
   
-          gameController
-            .discard(cardToDiscard)
-            .then(response => {
-              // console.log(response, 'discarded...')
-            })
-            .catch(error => {
-              console.log(error)
-            });
-        }
-        else {
-          console.log('ERROR! Regex match failed.')
-        }
-      })
-  });
+  //         gameController
+  //           .discard(cardToDiscard)
+  //           .then(response => {
+  //             // console.log(response, 'discarded...')
+  //           })
+  //           .catch(error => {
+  //             console.log(error)
+  //           });
+  //       }
+  //       else {
+  //         console.log('ERROR! Regex match failed.')
+  //       }
+  //     })
+  // });
 }

@@ -40,7 +40,7 @@ export const GameSchema = new Schema({
       validator: function(v) {
         return v => Array.isArray(v) && v.length >= 0 && v.length <= 52;
       },
-      message: "Min: 0 Max: 52 Players"
+      message: "Min: 0 Max: 52 Cards"
     }
   },
   requiredPointsPerPlayer: {

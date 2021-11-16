@@ -1,7 +1,7 @@
 import { required } from "joi";
 import mongoose from "mongoose";
 import { CardSchema } from "./Card";
-import { UserSchema } from "../../profile/models/User";
+import { UserSchema } from "../../user/models/User";
 
 export const PlayerSchema = new mongoose.Schema({
   id: {

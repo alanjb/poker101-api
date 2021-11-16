@@ -7,12 +7,10 @@ import middleware from '../../app/middleware/middleware';
 export function initProfileRoutes(app: express.Application) {
   console.log('- Initializing profile routes');
 
-  app.get('/api/profile/user', middleware, (req: any, res: any) => {
+  app.get('/api/user/user', middleware, (req: any, res: any) => {
     try {
       const userController = new UserController();
-      const newUser = new User({
-        email: req.body.email
-      });
+      const newUser = new User({email: req.query.email});
       
       return userController
         .getUser(newUser)

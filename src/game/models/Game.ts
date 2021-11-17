@@ -3,11 +3,6 @@ import { PlayerSchema } from "./Player";
 import { CardSchema } from "./Card";
 
 export const GameSchema = new Schema({
-  id: {
-    type: String,
-    required: true,
-    unique: true
-  },
   pot: {
     type: Number,
     min: 0,

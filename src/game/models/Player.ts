@@ -4,11 +4,6 @@ import { CardSchema } from "./Card";
 import { UserSchema } from "../../user/models/User";
 
 export const PlayerSchema = new mongoose.Schema({
-  id: {
-    type: UserSchema,
-    required: true,
-    unique: true
-  },
   folded: {
     type: Boolean,
     required: true

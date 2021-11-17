@@ -42,8 +42,7 @@ export function initGameRoutes(app: express.Application) {
     try {
       const gameController = new GameController();
       const newGame = new Game({
-        id: 1,
-        pot: 3000,
+        pot: 0,
         roundCount: 1,
         status: 'starting',
         requiredPointsPerPlayer: req.body.game.requiredPointsPerPlayer,

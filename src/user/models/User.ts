@@ -1,4 +1,3 @@
-import { required } from "joi";
 import mongoose from "mongoose";
 
 export const UserSchema = new mongoose.Schema({
@@ -6,14 +5,6 @@ export const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true
-  },
-  firstName:  {
-    type: String,
-    required: true
-  },
-  lastName:  {
-    type: String,
-    required: true
   },
   email:  {
     type: String,

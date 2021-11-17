@@ -36,6 +36,7 @@ class App {
       //log server creation error
     }
 
+    //helmet
     this.app.use(logger('dev'));
     this.app.use(cors())
     this.app.use(express.urlencoded({ extended: true }))
@@ -57,14 +58,14 @@ class App {
     if (!mongoDB) {
       //log m
       throw new Error(
-        ".env is missing the definition of an AUTH0_AUDIENCE environmental variable"
+        ""
     );
     }
 
     if (!mongoose) {
       //log m
       throw new Error(
-        ".env is missing the definition of an AUTH0_AUDIENCE environmental variable"
+        ""
       );
     }
     

@@ -39,28 +39,28 @@ Run `npm run start` in root directory. The server will use http://localhost:8000
 - raise()
 - discard()
 - fold()
-- gameComplete()
+- complete()
 
-### Profile - /api/profile
+### User - /api/user
 - createUser()
 - getUser()
 - getUsers()
 
 Endpoint | Method | Description 
 --- | --- | ---
-/api/profile/createUser | POST | Creates a new user 
-/api/profile/getUser | GET | Returns an existing user
-/api/profile/getUsers | GET | Returns an array of existing users
-/api/game/createGame | POST | Creates a new game 
-/api/game/getGame | GET | Returns an existing game
-/api/game/getGames | GET | Returns an array of existing games
+/api/user/user | POST | Creates a new user 
+/api/user/user | GET | Returns an existing user
+/api/user/users | GET | Returns an array of existing users
+/api/game/game | POST | Creates a new game 
+/api/game/game | GET | Returns an existing game
+/api/game/games | GET | Returns an array of existing games
 /api/game/check | POST | Player defers betting option. If at a later point a player bet, any player that has checked must then call, raise or fold
 /api/game/bet | POST | Player can add an amount to a pot
 /api/game/call | POST | Player adds the amount to the pot that the player before them bet. This is one of two possible responses to a bet
 /api/game/raise | POST | Player adds the amount to the pot that the player before them bet plus an additional amount. This is one of two possible responses to a bet
 /api/game/discard | POST | Player can discard no more than 3 cards after first round of betting
 /api/game/fold | POST | Player exists the game
-/api/game/gameComplete | POST | Records the outcome and statistics of the game
+/api/game/complete | POST | Records the outcome and statistics of the game
 
 
 ## Entity Diagram

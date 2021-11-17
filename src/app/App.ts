@@ -2,7 +2,7 @@ import express from 'express';
 import logger from 'morgan';
 import cors from 'cors';
 import { initGameRoutes } from '../game/routes/routes';
-import { initProfileRoutes } from '../user/routes/routes';
+import { initUserRoutes } from '../user/routes/routes';
 import middleware from './middleware/middleware';
 
 // Creates and configures an Node web server. Prevents sub-typing of this class.
@@ -90,7 +90,7 @@ class App {
     });
 
     initGameRoutes(app);
-    initProfileRoutes(app);
+    initUserRoutes(app);
   }
 
   private static start() {

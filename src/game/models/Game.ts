@@ -45,7 +45,7 @@ export const GameSchema = new Schema({
   },
   anteAmount: {
     type: Number,
-    min: 50,
+    min: 0,
     max: 1000000,
     required: true
   }

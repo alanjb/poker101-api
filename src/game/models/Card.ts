@@ -13,4 +13,9 @@ export const CardSchema = new Schema({
   },
 });
 
-export const Card = mongoose.model("Card", CardSchema);
+export const CardModel = mongoose.model("Card", CardSchema);
+
+export interface Card {
+  symbol: string; 
+  suit: string;
+}

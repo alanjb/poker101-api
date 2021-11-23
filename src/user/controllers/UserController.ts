@@ -1,7 +1,19 @@
 import { User } from '../models/User';
 
 export default class UserController {
-  public getUser(email) {
+  public getById(filter) {
+    return User
+      .findOne(filter)
+      .then((user) => {
+        console.log("Success! User found by id");
+        return user;
+      })
+      .catch((error) => {
+        return error;
+      });
+  }
+
+  public get(email) {
     return User
       .findOne({email})
       .then((response) => {

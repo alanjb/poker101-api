@@ -1,7 +1,5 @@
-import { required } from "joi";
 import mongoose from "mongoose";
-import { CardSchema } from "./Card";
-import { UserSchema } from "../../user/models/User";
+import { Card, CardSchema } from "./Card";
 
 export const PlayerSchema = new mongoose.Schema({
   folded: {
@@ -18,14 +16,32 @@ export const PlayerSchema = new mongoose.Schema({
     min: 0
   },
   hand: {
-  type: [CardSchema],
-  validate: {
-    validator: function(v) {
-      return v => Array.isArray(v) && v.length == 5;
-    },
-    message: "Hand must be 5 cards"
-  }
-}
+    type: [CardSchema],
+    validate: {
+      validator: function(v) {
+        return v => Array.isArray(v) && v.length == 5;
+      },
+      message: "Hand must be 5 cards"
+    }
+  },
+  isTurn: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  email:  {
+    type: String,
+    required: true,
+    unique: true
+  },
 });
 
-export const Player = mongoose.model("Player", PlayerSchema);
+export const PlayerModel = mongoose.model("Player", PlayerSchema);
+
+export interface Player {
+  folded: boolean; 
+  isDealer: boolean;
+  points: number;
+  hand: Card[];
+  isTurn: boolean;
+}

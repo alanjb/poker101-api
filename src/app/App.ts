@@ -32,13 +32,9 @@ class App {
   private static initMiddleware(): void {
     console.log("Initializing server middleware...");
 
-    if (!this.app) {
-      //log server creation error
-    }
-
     //helmet
     this.app.use(logger('dev'));
-    this.app.use(cors())
+    this.app.use(cors());
     this.app.use(express.urlencoded({ extended: true }))
     this.app.use(express.json());
     this.app.use(function (req: any, res: any, next: any) {

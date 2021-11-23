@@ -11,7 +11,7 @@ export function initUserRoutes(app: express.Application) {
       const userController = new UserController();
       
       return userController
-        .getUser(req.query.email)
+        .get(req.query.email)
         .then((user) => {
           if (user == null) {
             console.log("User not found, signing user up");

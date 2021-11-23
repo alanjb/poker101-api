@@ -1,6 +1,21 @@
 import { Game } from "../models/Game";
 
 export default class GameController {
+
+  /** 
+   * @param {Object} id  
+   * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
+   * @return {response} The result of adding num1 and num2.
+   */ 
+  public async get(id) {
+    return await Game.findById(id);
+  }
+
+  /** 
+   * @param {Object} id  
+   * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
+   * @return {response} The result of adding num1 and num2.
+   */ 
   public getAll() {
     return Game
       .find({})
@@ -14,6 +29,11 @@ export default class GameController {
       }) 
   }
 
+  /** 
+   * @param {Object} id  
+   * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
+   * @return {response} The result of adding num1 and num2.
+   */ 
   public create(game) {
     return game
       .save()
@@ -26,8 +46,52 @@ export default class GameController {
         return error;
       }) 
   }
+ 
+   /** 
+   * @param {Object} id Find game by id and update
+   * @param {Object} update Applies id to given object property
+   * @return {response} The result of adding num1 and num2.
+   */ 
+  public async addPlayer(id, update) {
+    return await Game.findByIdAndUpdate(id, update);
+  }
 
-  // public discard(card) {
+   /** 
+   * @param {Object} filter The first number to add.
+   * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
+   * @return {response} The result of adding num1 and num2.
+   */ 
+  public start(id, update) {
+    return Game
+      .findByIdAndUpdate(id, update)
+      .then(response => {
+        console.log("Success! Starting game...");
+        return response;
+      })
+      .catch(error => {
+        console.log("Error! Could not start game...");
+        return error;
+      }) 
+  }
+
+  /** 
+   * @param {Object} id  
+   * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
+   * @return {response} The result of adding num1 and num2.
+   */ 
+  public check(filter) {
+    return Game
+      .findOne(filter)
+      .then(response => {
+        return response;
+      })
+      .catch(error => {
+        console.log("Database save error - could not create game");
+        return error;
+      }) 
+  }
+  
+  // public discard(cards) {
   //   return card
   //     .remove()
   //     .then((response) => {

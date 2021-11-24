@@ -1,9 +1,5 @@
 import { Card } from "../models/Card";
-
-export function determineNextPlayersTurn() {
-  //get size
-  //if position is at position of size, move this position to first position
-}
+import { Player } from "../models/Player";
 
 export const deck: Card[] = [
   { symbol: 'diamond', suit: '2' },
@@ -72,4 +68,13 @@ export const shuffleDeck = () => {
     deck[j] = temp;
   }
   return deck;
+}
+
+export const updateGame = (updatedPlayersArray: Player[], updatedRoundArray: string[], action: string) => {
+  updatedPlayersArray.forEach((player, i) => {
+    if (player.isTurn) {
+      updatedRoundArray[i] = action;
+      updatedPlayersArray[i + 1].isTurn = true;
+    }
+  });
 }

@@ -4,7 +4,7 @@ import { Player } from "../models/Player";
 import GameController from '../controllers/GameController';
 import express from "express";
 import UserController from "../../user/controllers/UserController";
-import { shuffleDeck } from '../utils/utils';
+import { shuffleDeck, updateGame } from '../utils/utils';
 
 export function initGameRoutes(app: express.Application) {
   console.log('- Initializing game routes');
@@ -92,7 +92,7 @@ export function initGameRoutes(app: express.Application) {
       //avoid adding player twice 
       if (game.players.length > 1) {
         game.players.forEach(player => {
-          if (player.email == user.email) {
+          if (player.email === user.email) {
             console.log("Error: User is already added to this game");
             return res.json(errorFunction(true, "Error: Could not add player to game, player already added")); 
           }
@@ -112,8 +112,6 @@ export function initGameRoutes(app: express.Application) {
           }
         ]
       };
-
-      console.log(update)
 
       gameController
         .addPlayer(gameId, update)
@@ -169,88 +167,31 @@ export function initGameRoutes(app: express.Application) {
     }
   });
 
-  app.put('/api/game/check', (req, res) => {
+  app.put('/api/game/check', async (req, res) => {
     try {
       const gameController = new GameController();
       const gameId = req.body.params.gameId;
-      const playerId = req.body.params.playerId;
+      const game = await gameController.get(gameId);
+      const action = 'check';
 
-      const filter = {
-        _id: gameId,
+      //players cannot check if a bet has been made
+      if (game.bet != null) {
+        return res.json(errorFunction(true, "Error: cannot check if bet has been placed")); 
+      }
+
+      const updatedPlayersArray = game.players;
+      const updatedRoundArray = game.round === 1 ? game.roundOneMoves : game.roundTwoMoves;
+      
+      updateGame(updatedPlayersArray, updatedRoundArray, action);
+
+      const update = {
+        players: updatedPlayersArray,
+        [game.round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray
       };
 
-      return gameController
-        .get(filter)
-        .then(game => {
+      const updatedGame = await gameController.updateGame(gameId, update);
 
-          const players: Player[] = [
-            {
-              folded: false,
-              isDealer: false,
-              points: 300,
-              hand: [
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-              ],
-              isTurn: false
-            },
-            {
-              folded: false,
-              isDealer: false,
-              points: 300,
-              hand: [
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-              ],
-              isTurn: false
-            },
-            {
-              folded: false,
-              isDealer: false,
-              points: 300,
-              hand: [
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-                { symbol: '', suit: '' },
-              ],
-              isTurn: false
-            }
-          ]
-
-          game.players = [
-            {
-
-            }
-          ];
-          
-          // console.log(players);
-
-          // const filter = {
-          //   players
-          // }
-
-          // gameController
-          //   .check(filter)
-          //   .then(game => {
-          //     //updated game to all players, will set next player turn
-
-          //     return game;
-          //   })
-          //   .catch(error => {
-
-          //   });
-        })
-        .catch(error => {
-          
-        });
+      console.log(updatedGame);
 
     } catch (error) {
       alert('Error! Could not process check')

@@ -57,7 +57,7 @@ export default class GameController {
   }
 
    /** 
-   * @param {Object} filter The first number to add.
+   * @param {string} id The first number to add.
    * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
    * @return {response} The result of adding num1 and num2.
    */ 
@@ -75,20 +75,12 @@ export default class GameController {
   }
 
   /** 
-   * @param {Object} id  
-   * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
-   * @return {response} The result of adding num1 and num2.
+   * @param {string} id  
+   * @param {Object} update 
+   * @return {response} The updated game object
    */ 
-  public check(filter) {
-    return Game
-      .findOne(filter)
-      .then(response => {
-        return response;
-      })
-      .catch(error => {
-        console.log("Database save error - could not create game");
-        return error;
-      }) 
+  public async updateGame(id, update) {
+    return await Game.findByIdAndUpdate(id, update);
   }
   
   // public discard(cards) {

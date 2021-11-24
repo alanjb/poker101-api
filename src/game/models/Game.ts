@@ -48,7 +48,16 @@ export const GameSchema = new Schema({
     min: 50,
     max: 1000000,
     required: true
-  }
+  },
+  bet: {
+    type: Number,
+  },
+  roundOneMoves: {
+    type: Array
+  },
+  roundTwoMoves: {
+    type: Array
+  },
 });
 
 export const Game = mongoose.model("Game", GameSchema);

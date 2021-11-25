@@ -1,5 +1,5 @@
 import { Card } from "../models/Card";
-import { Player } from "../models/Player";
+import { Player } from "../../player/models/Player";
 
 export const deck: Card[] = [
   { symbol: 'diamond', suit: '2' },

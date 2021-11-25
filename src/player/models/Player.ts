@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Card, CardSchema } from "./Card";
+import { Card, CardSchema } from "../../game/models/Card";
 
 export const PlayerSchema = new mongoose.Schema({
   folded: {
@@ -29,7 +29,7 @@ export const PlayerSchema = new mongoose.Schema({
     required: true,
     default: false
   },
-  email:  {
+  email: {
     type: String,
     required: true,
     unique: true

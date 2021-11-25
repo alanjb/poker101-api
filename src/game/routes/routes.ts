@@ -1,10 +1,11 @@
 import { errorFunction } from "../../app/config/utils";
-import { Game } from "../models/Game";
-import { Player } from "../models/Player";
+import { Game, GameModel } from "../models/Game";
+import { PlayerModel } from "../../player/models/Player";
 import GameController from '../controllers/GameController';
 import express from "express";
 import UserController from "../../user/controllers/UserController";
 import { shuffleDeck, updateGame } from '../utils/utils';
+import PlayerController from "../../player/controllers/PlayerController";
 
 export function initGameRoutes(app: express.Application) {
   console.log('- Initializing game routes');
@@ -39,7 +40,7 @@ export function initGameRoutes(app: express.Application) {
         .catch((error) => {
           console.log("Error: Failed to get games...", error);
           res.json({
-            games: null
+            error: error
           })
         });
     } catch (error) {
@@ -48,35 +49,36 @@ export function initGameRoutes(app: express.Application) {
     }
   });
 
-  app.post('/api/game/create', (req: any, res: any) => {
+  app.post('/api/game/create', async (req: any, res: any) => {
     try {
       const gameController = new GameController();
-      const newGame = new Game({
+      const newGame = new GameModel({
         pot: req.body.game.anteAmount,
         roundCount: 1,
         status: 'starting',
+        players: [],
+        deck: [],
         requiredPointsPerPlayer: req.body.game.requiredPointsPerPlayer,
-        anteAmount: req.body.game.anteAmount
+        anteAmount: req.body.game.anteAmount,
+        bet: 0,
+        roundOneMoves: [],
+        roundTwoMoves: []
       });
-  
-      return gameController
-        .create(newGame)
-        .then((game) => {
-          console.log("Game Successfully Created..." + game);
-          res.json({
-            isGameCreated: true,
-            game: game
-          })
-        })
-        .catch((error) => {
-          console.log("Error: Failed to create game...", error);
-          res.json({
-            isGameCreated: false
-          })
+
+      const createdGame = await gameController.create(newGame);
+
+      if (createdGame instanceof GameModel) {
+        return res.json({
+          game: createdGame
         });
-    } catch (error) {
-      res.status(403);
-      return res.json(errorFunction(true, "Error Creating game"));
+      }
+      else {
+        console.log("Error: database could not save game");
+        return res.json(errorFunction(true, "Error: database could not save game"));
+      }
+    }
+    catch (error) {
+      return res.json(errorFunction(true, "Error Creating game: " + error));
     }
   });
 
@@ -99,29 +101,50 @@ export function initGameRoutes(app: express.Application) {
         });
       }
 
-      const update = {
-        players: [
-          ...game.players,
-          {
-            userId: user.email,
-            folded: false, 
-            isDealer: false,
-            points: user.points,
-            hand: [],
-            isTurn: false
-          }
-        ]
-      };
+      //check if user has minimum points for two rounds
+      if (user.points < game.ante * 3) {
+        console.log("Error: User doesn't have enough points");
+        return res.json(errorFunction(true, "Error: You can't join the game because you're broke (you don't have enough points)")); 
+      }
 
-      gameController
-        .addPlayer(gameId, update)
-        .then(game => {
-          console.log('game', game)
-        })
-        .catch(error => {
-          console.log('Error! Could not add user: ' + error);
-        });
-    } catch (error) {
+      const playerController = new PlayerController();
+      const player = new PlayerModel({
+        folded: false, 
+        isDealer: false,
+        points: user.points,
+        hand: [],
+        isTurn: false,
+        email: user.email
+      });
+
+      const newPlayer = await playerController.create(player);
+
+      if (newPlayer instanceof PlayerModel) {
+
+        const update = {
+          players: [
+            ...game.players,
+            newPlayer
+          ]
+        }
+
+        const createdGame = await gameController.addPlayer(gameId, update);
+
+        if (createdGame instanceof GameModel) {
+          return res.json({
+            game: createdGame
+          });
+        }
+        else {
+          console.log("Error: database could not add  player");
+          return res.status(403);
+        }
+      }
+      else {
+        console.log('Error: cannot add player twice')
+      }
+    }
+    catch (error) {
       return res.json(errorFunction(true, "Error: There was an issue adding player to game: " + error)); 
     }
   });
@@ -144,6 +167,7 @@ export function initGameRoutes(app: express.Application) {
       updatedPlayersArray[1].isTurn = true;
 
       //deal 5 cards to each player
+      
       
       // const update = {
       //   status: 'in progress',
@@ -181,7 +205,7 @@ export function initGameRoutes(app: express.Application) {
 
       const updatedPlayersArray = game.players;
       const updatedRoundArray = game.round === 1 ? game.roundOneMoves : game.roundTwoMoves;
-      
+
       updateGame(updatedPlayersArray, updatedRoundArray, action);
 
       const update = {

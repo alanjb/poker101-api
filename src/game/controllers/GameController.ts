@@ -1,4 +1,4 @@
-import { Game } from "../models/Game";
+import { GameModel } from "../models/Game";
 
 export default class GameController {
 
@@ -8,7 +8,7 @@ export default class GameController {
    * @return {response} The result of adding num1 and num2.
    */ 
   public async get(id) {
-    return await Game.findById(id);
+    return await GameModel.findById(id);
   }
 
   /** 
@@ -17,7 +17,7 @@ export default class GameController {
    * @return {response} The result of adding num1 and num2.
    */ 
   public getAll() {
-    return Game
+    return GameModel
       .find({})
       .then(response => {
         console.log("Database find success - fetched all games");
@@ -34,17 +34,13 @@ export default class GameController {
    * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
    * @return {response} The result of adding num1 and num2.
    */ 
-  public create(game) {
-    return game
-      .save()
-      .then(response => {
-        console.log("Database save success - game created");
-        return response;
-      })
-      .catch(error => {
-        console.log("Database save error - could not create game");
-        return error;
-      }) 
+  public async create(game) {
+    try {
+      return await game.save();
+    }
+    catch (error){
+      return error;
+    } 
   }
  
    /** 
@@ -53,7 +49,12 @@ export default class GameController {
    * @return {response} The result of adding num1 and num2.
    */ 
   public async addPlayer(id, update) {
-    return await Game.findByIdAndUpdate(id, update);
+    try {
+      return await GameModel.findByIdAndUpdate(id, update);
+    }
+    catch (error) {
+      return error;
+    }
   }
 
    /** 
@@ -62,7 +63,7 @@ export default class GameController {
    * @return {response} The result of adding num1 and num2.
    */ 
   public start(id, update) {
-    return Game
+    return GameModel
       .findByIdAndUpdate(id, update)
       .then(response => {
         console.log("Success! Starting game...");
@@ -80,7 +81,7 @@ export default class GameController {
    * @return {response} The updated game object
    */ 
   public async updateGame(id, update) {
-    return await Game.findByIdAndUpdate(id, update);
+    return await GameModel.findByIdAndUpdate(id, update);
   }
   
   // public discard(cards) {

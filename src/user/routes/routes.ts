@@ -13,7 +13,8 @@ export function initUserRoutes(app: express.Application) {
       return userController
         .get(req.query.email)
         .then((user) => {
-          if (user == null) {
+          //do instanceof here?
+          if (!user) {
             console.log("User not found, signing user up");
             res.json({
               user: user

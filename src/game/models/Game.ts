@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { PlayerSchema } from "./Player";
+import { PlayerSchema } from "../../player/models/Player";
 import { CardSchema } from "./Card";
 
 export const GameSchema = new Schema({
@@ -60,4 +60,8 @@ export const GameSchema = new Schema({
   },
 });
 
-export const Game = mongoose.model("Game", GameSchema);
+export const GameModel = mongoose.model("Game", GameSchema);
+
+export interface Game {
+
+}

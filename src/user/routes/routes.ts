@@ -1,6 +1,6 @@
 import UserController from '../controllers/UserController';
 import express from "express";
-import { User } from "../models/User";
+import { UserModel } from "../models/User";
 import middleware from '../../app/middleware/middleware';
 
 export function initUserRoutes(app: express.Application) {
@@ -11,7 +11,7 @@ export function initUserRoutes(app: express.Application) {
       const userController = new UserController();
       
       return userController
-        .get(req.query.email)
+        .getByEmail(req.query.email)
         .then((user) => {
           //do instanceof here?
           if (!user) {
@@ -39,7 +39,7 @@ export function initUserRoutes(app: express.Application) {
     try {
       const userController = new UserController();
 
-      const newUser = new User({
+      const newUser = new UserModel({
         id: 'test1', //requires id here for validation but is generated
         firstName: req.body.firstName,
         lastName: req.body.lastName,

@@ -153,41 +153,33 @@ export function initGameRoutes(app: express.Application) {
     try {
       const gameController = new GameController();
       const gameId = req.body.params.gameId;
-
-      //find game object in DB
       const game = await gameController.get(gameId);
-
-      //shuffle deck
       const shuffledDeck = shuffleDeck();
-
-      //get players array
       const updatedPlayersArray = game.players;
-
-      //make second player turn
       updatedPlayersArray[1].isTurn = true;
 
-      //deal 5 cards to each player
-      
-      
-      // const update = {
-      //   status: 'in progress',
-      //   players: updatedPlayersArray,
-      //   deck: shuffledDeck
-      // };
-      
-      // return gameController
-      //   .start(gameId, update)
-      //   .then(() => {
-      //     res.json({
-      //       gameStarted: true
-      //     })
-      //   })
-      //   .catch(error => {
-      //     return res.json(errorFunction(true, "Error: Could not start game: " + error));
-      //   });
+      //get unshuffled deck from db, pass into shuffleDeck()
 
+      //deal 5 cards to each player
+      const update = {
+        status: 'in progress',
+        players: updatedPlayersArray,
+        deck: shuffledDeck
+      };
+
+      const gameStarted = await gameController.start(gameId, update);
+
+      if (gameStarted instanceof GameModel) {
+        return res.json({
+          game: gameStarted
+        });
+      }
+      else {
+        console.log("Error: database could not start game");
+        return res.status(403);
+      }
     } catch (error) {
-        return res.json(errorFunction(true, "Error! There was an issue starting the game"));
+      return res.json(errorFunction(true, "Error! There was an issue starting the game"));
     }
   });
 
@@ -199,7 +191,7 @@ export function initGameRoutes(app: express.Application) {
       const action = 'check';
 
       //players cannot check if a bet has been made
-      if (game.bet != null) {
+      if (game.bet !== 0) {
         return res.json(errorFunction(true, "Error: cannot check if bet has been placed")); 
       }
 

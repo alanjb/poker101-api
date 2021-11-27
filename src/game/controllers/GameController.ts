@@ -8,7 +8,11 @@ export default class GameController {
    * @return {response} The result of adding num1 and num2.
    */ 
   public async get(id) {
-    return await GameModel.findById(id);
+    try {
+      return await GameModel.findById(id);
+    } catch (error) {
+      return error;
+    }
   }
 
   /** 
@@ -16,17 +20,12 @@ export default class GameController {
    * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
    * @return {response} The result of adding num1 and num2.
    */ 
-  public getAll() {
-    return GameModel
-      .find({})
-      .then(response => {
-        console.log("Database find success - fetched all games");
-        return response;
-      })
-      .catch(error => {
-        console.log("Database find error - could not fetch all games");
-        return error;
-      }) 
+  public async getAll() {
+    try {
+      return await GameModel.find({})
+    } catch (error) {
+      return error;
+    }
   }
 
   /** 
@@ -62,17 +61,12 @@ export default class GameController {
    * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
    * @return {response} The result of adding num1 and num2.
    */ 
-  public start(id, update) {
-    return GameModel
-      .findByIdAndUpdate(id, update)
-      .then(response => {
-        console.log("Success! Starting game...");
-        return response;
-      })
-      .catch(error => {
-        console.log("Error! Could not start game...");
-        return error;
-      }) 
+  public async start(id, update) {
+    try {
+      return await GameModel.findByIdAndUpdate(id, update); 
+    } catch (error) {
+      return error
+    }
   }
 
   /** 
@@ -81,7 +75,11 @@ export default class GameController {
    * @return {response} The updated game object
    */ 
   public async updateGame(id, update) {
-    return await GameModel.findByIdAndUpdate(id, update);
+    try {
+      return await GameModel.findByIdAndUpdate(id, update);
+    } catch (error) {
+      return error;
+    }
   }
   
   // public discard(cards) {

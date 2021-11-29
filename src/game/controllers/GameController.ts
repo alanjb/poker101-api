@@ -4,8 +4,7 @@ export default class GameController {
 
   /** 
    * @param {Object} id  
-   * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
-   * @return {response} The result of adding num1 and num2.
+   * @return {response} The request game object
    */ 
   public async get(id) {
     try {
@@ -16,9 +15,7 @@ export default class GameController {
   }
 
   /** 
-   * @param {Object} id  
-   * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
-   * @return {response} The result of adding num1 and num2.
+   * @return {response} All game objects
    */ 
   public async getAll() {
     try {
@@ -29,9 +26,8 @@ export default class GameController {
   }
 
   /** 
-   * @param {Object} id  
-   * @param {Object} update Upda te game status to in progress, set player 2's isTurn to true
-   * @return {response} The result of adding num1 and num2.
+   * @param {Object} game 
+   * @return {response} The newly created game
    */ 
   public async create(game) {
     try {
@@ -81,17 +77,4 @@ export default class GameController {
       return error;
     }
   }
-  
-  // public discard(cards) {
-  //   return card
-  //     .remove()
-  //     .then((response) => {
-  //       console.log("Database remove success - Card DISCARDED");
-  //       return response;
-  //     })
-  //     .catch((response) => {
-  //       console.log("Database save error - Card NOT DISCARDED");
-  //       return response;
-  //     }) 
-  // }
 }

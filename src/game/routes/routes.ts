@@ -1,62 +1,92 @@
+import express from "express";
 import { errorFunction } from "../../app/config/utils";
-import { Game, GameModel } from "../models/Game";
+import { GameModel } from "../models/Game";
 import { PlayerModel } from "../../player/models/Player";
 import GameController from '../controllers/GameController';
-import express from "express";
+import asyncHandler from "express-async-handler";
 import UserController from "../../user/controllers/UserController";
 import { shuffleDeck, updateGame } from '../utils/utils';
 import PlayerController from "../../player/controllers/PlayerController";
+import { UserModel } from "../../user/models/User";
 
 export function initGameRoutes(app: express.Application) {
   console.log('- Initializing game routes');
 
-  app.get('/api/game/game', async (req: any, res: any) => {
+  app.get('/api/game/game', asyncHandler(async (req: any, res: any) => {
     try {
       const gameController = new GameController();
-      const gameId = req.query.gameId;  
+      const gameId = req.query.gameId;
+      
+      console.log(gameId);
+
       const game = await gameController.get(gameId);
-  
-      return res.json({
+
+      res.json({
         game: game
       });
       
-    } catch (error) {
-      return res.json(errorFunction(true, "Error: Could not start game: " + error));
     }
-  });
+    catch(error) {
+      res.json(errorFunction(true, "Error: Could not start game: " + error));
+    }
+  }));
 
-  app.get('/api/game/games', (req: any, res: any) => {
+  app.get('/api/game/games',  asyncHandler(async (req: any, res: any) => {
     try {
       const gameController = new GameController();
+      const games = await gameController.getAll();
 
-      return gameController
-        .getAll()
-        .then((games) => {
-          console.log("Successfully retrieved all games...");
-          res.json({
-            games: games
-          })
-        })
-        .catch((error) => {
-          console.log("Error: Failed to get games...", error);
-          res.json({
-            error: error
-          })
-        });
-    } catch (error) {
-      res.status(403);
-      return res.json(errorFunction(true, "Error Creating User"));
+      console.log(games);
+
+      res.json({
+        games: games
+      })
+
     }
-  });
+    catch (error) {
+      console.log("Error: Could not get games \n\n " + error);
+      res.json(errorFunction(true, "Error: Could not get games \n\n " + error));
+    }
+  }));
 
-  app.post('/api/game/create', async (req: any, res: any) => {
+  app.post('/api/game/create', asyncHandler(async (req: any, res: any) => {
     try {
-      const gameController = new GameController();
+      const userController = new UserController();
+      const userResponse = await userController.getById(req.body.userId);
+
+      if (!(userResponse instanceof UserModel)) {
+        console.log("Error: database could not find user: " + userResponse);
+        res.json(errorFunction(true, "Error: database could not find user: " + userResponse));
+      }
+
+      const playerController = new PlayerController();
+
+      //add the creator of this game as dealer
+      const dealer = new PlayerModel({
+        folded: false, 
+        isDealer: true,
+        points: userResponse.points,
+        hand: [],
+        isTurn: false,
+        email: userResponse.email
+      });
+
+      const newPlayerResponse = await playerController.create(dealer);
+
+      if (!(newPlayerResponse instanceof PlayerModel)) {
+        console.log("Error: database could not create player");
+        res.json(errorFunction(true, "Error: database could not create player: " + newPlayerResponse));
+      }
+
+      const newPlayerArray = [];
+      newPlayerArray.push(dealer);
+
+      const gameController = new GameController();      
       const newGame = new GameModel({
         pot: req.body.game.anteAmount,
         roundCount: 1,
         status: 'starting',
-        players: [],
+        players: newPlayerArray,
         deck: [],
         requiredPointsPerPlayer: req.body.game.requiredPointsPerPlayer,
         anteAmount: req.body.game.anteAmount,
@@ -67,20 +97,19 @@ export function initGameRoutes(app: express.Application) {
 
       const createdGame = await gameController.create(newGame);
 
-      if (createdGame instanceof GameModel) {
-        return res.json({
-          game: createdGame
-        });
+      if (!(createdGame instanceof GameModel)) {
+        console.log("Error: database could not create game");
+        return res.json(errorFunction(true, "Error: database could not create game"));
       }
-      else {
-        console.log("Error: database could not save game");
-        return res.json(errorFunction(true, "Error: database could not save game"));
-      }
+
+      console.log("Success: game created in database");
+      res.json({game: createdGame});
     }
     catch (error) {
-      return res.json(errorFunction(true, "Error Creating game: " + error));
+      console.log("Error: There was a problem creating the game \n\n" + error);
+      res.json(errorFunction(true, "Error: There was a problem creating the game \n\n" + error));
     }
-  });
+  }));
 
   app.put('/api/game/add-player', async (req, res) => {
     try {
@@ -90,6 +119,8 @@ export function initGameRoutes(app: express.Application) {
       const userId = req.body.params.userId;
       const game = await gameController.get(gameId);
       const user = await userController.getById(userId);
+
+      //need to perform check that game and user exist
 
       //avoid adding player twice 
       if (game.players.length > 1) {
@@ -149,16 +180,21 @@ export function initGameRoutes(app: express.Application) {
     }
   });
 
-  app.put('/api/game/start', async (req: any, res: any) => {
+  app.put('/api/game/start', asyncHandler(async (req: any, res: any) => {
     try {
       const gameController = new GameController();
-      const gameId = req.body.params.gameId;
+      const gameId = Object.values(req.body.params.gameId)[0];
+
+      console.log(gameId)
+
       const game = await gameController.get(gameId);
       const shuffledDeck = shuffleDeck();
       const updatedPlayersArray = game.players;
+
+      //set the second player (left of dealer) to their turn
       updatedPlayersArray[1].isTurn = true;
 
-      //get unshuffled deck from db, pass into shuffleDeck()
+      //get unshuffled deck from db, pass into shuffleDeck() and assign 5 cards to each player
 
       //deal 5 cards to each player
       const update = {
@@ -167,23 +203,24 @@ export function initGameRoutes(app: express.Application) {
         deck: shuffledDeck
       };
 
-      const gameStarted = await gameController.start(gameId, update);
+      const gameStartedResponse = await gameController.start(gameId, update);
 
-      if (gameStarted instanceof GameModel) {
-        return res.json({
-          game: gameStarted
-        });
+      if (!(gameStartedResponse instanceof GameModel)) {
+        console.log("Error: database could not find user: " + gameStartedResponse);
+        res.json(errorFunction(true, "Error: database could not find user: " + gameStartedResponse));
       }
-      else {
-        console.log("Error: database could not start game");
-        return res.status(403);
-      }
-    } catch (error) {
+
+      console.log('Success: game created')
+      res.json({
+        game: gameStartedResponse
+      })
+    }
+    catch (error) {
       return res.json(errorFunction(true, "Error! There was an issue starting the game"));
     }
-  });
+  }));
 
-  app.put('/api/game/check', async (req, res) => {
+  app.put('/api/game/check', asyncHandler(async (req: any, res: any) => {
     try {
       const gameController = new GameController();
       const gameId = req.body.params.gameId;
@@ -195,53 +232,26 @@ export function initGameRoutes(app: express.Application) {
         return res.json(errorFunction(true, "Error: cannot check if bet has been placed")); 
       }
 
-      const updatedPlayersArray = game.players;
+      const playersArray = game.players;
       const updatedRoundArray = game.round === 1 ? game.roundOneMoves : game.roundTwoMoves;
-
-      updateGame(updatedPlayersArray, updatedRoundArray, action);
+      const isNextRound = updateGame(playersArray, updatedRoundArray, action);
 
       const update = {
-        players: updatedPlayersArray,
-        [game.round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray
+        players: playersArray,
+        [game.round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
       };
+
+      if (isNextRound) {
+        update.roundCount = 2;
+      }
 
       const updatedGame = await gameController.updateGame(gameId, update);
 
-      console.log(updatedGame);
+      console.log(updatedGame)
 
-    } catch (error) {
-      alert('Error! Could not process check')
     }
-  });
-
-  // app.delete('/api/game/discard', (req: any, res: any) => {
-  
-  //   try {
-  //   } catch (error) { }
-  
-  //   const cardsToDiscard = req.body;
-  //   const gameController = new GameController();
-  
-  //   cardsToDiscard
-  //     .forEach(card => {
-  //       const cardType = card.face + ' of ' + card.suit;
-  
-  //       if (cardType.match(CARD_REGEX)) {
-      
-  //         const cardToDiscard = new Card({id: card.id, face: card.face, suit: card.suit});
-  
-  //         gameController
-  //           .discard(cardToDiscard)
-  //           .then(response => {
-  //             // console.log(response, 'discarded...')
-  //           })
-  //           .catch(error => {
-  //             console.log(error)
-  //           });
-  //       }
-  //       else {
-  //         console.log('ERROR! Regex match failed.')
-  //       }
-  //     })
-  // });
+    catch (error) {
+      console.log('Error! Could not process check')
+    }
+  }));
 }

@@ -1,5 +1,6 @@
 import { Card } from "../models/Card";
 import { Player } from "../../player/models/Player";
+import { Game } from "../models/Game";
 
 export const deck: Card[] = [
   { symbol: 'diamond', suit: '2' },
@@ -70,11 +71,23 @@ export const shuffleDeck = () => {
   return deck;
 }
 
-export const updateGame = (updatedPlayersArray: Player[], updatedRoundArray: string[], action: string) => {
-  updatedPlayersArray.forEach((player, i) => {
+export const updateGame = (playersArray: Player[], updatedRoundArray: string[], action: string) => {
+  let isNextRound: boolean;
+
+  playersArray.forEach((player, i) => {
     if (player.isTurn) {
       updatedRoundArray[i] = action;
-      updatedPlayersArray[i + 1].isTurn = true;
+      playersArray[i].isTurn = false;
+      
+      //if reached last player
+      if (playersArray.length === i + 1) {
+        playersArray[0].isTurn = true;
+        isNextRound = true;
+      }
+      else {
+        playersArray[i+1].isTurn = true;
+      }
     }
   });
+  return isNextRound;
 }

@@ -44,4 +44,5 @@ export interface Player {
   points: number;
   hand: Card[];
   isTurn: boolean;
+  email: string;
 }

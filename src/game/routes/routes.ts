@@ -102,7 +102,6 @@ export function initGameRoutes(app: express.Application) {
         return res.json(errorFunction(true, "Error: database could not create game"));
       }
 
-      console.log("Success: game created in database");
       res.json({game: createdGame});
     }
     catch (error) {
@@ -111,7 +110,7 @@ export function initGameRoutes(app: express.Application) {
     }
   }));
 
-  app.put('/api/game/add-player', async (req, res) => {
+  app.put('/api/game/add-player', asyncHandler(async (req: any, res: any) => {
     try {
       const gameController = new GameController();
       const userController = new UserController();
@@ -178,15 +177,12 @@ export function initGameRoutes(app: express.Application) {
     catch (error) {
       return res.json(errorFunction(true, "Error: There was an issue adding player to game: " + error)); 
     }
-  });
+  }));
 
   app.put('/api/game/start', asyncHandler(async (req: any, res: any) => {
     try {
       const gameController = new GameController();
       const gameId = Object.values(req.body.params.gameId)[0];
-
-      console.log(gameId)
-
       const game = await gameController.get(gameId);
       const shuffledDeck = shuffleDeck();
       const updatedPlayersArray = game.players;
@@ -234,21 +230,132 @@ export function initGameRoutes(app: express.Application) {
 
       const playersArray = game.players;
       const updatedRoundArray = game.round === 1 ? game.roundOneMoves : game.roundTwoMoves;
-      const isNextRound = updateGame(playersArray, updatedRoundArray, action);
+      const round = game.round;
+      const startNextRound = updateGame(game, playersArray, updatedRoundArray, action, round);
 
       const update = {
         players: playersArray,
         [game.round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
       };
 
-      if (isNextRound) {
+      if (startNextRound) {
         update.roundCount = 2;
       }
 
       const updatedGame = await gameController.updateGame(gameId, update);
 
-      console.log(updatedGame)
+      res.json({
+        game: updatedGame
+      });
+    }
+    catch (error) {
+      console.log('Error! Could not process check')
+    }
+  }));
 
+  app.put('/api/game/bet', asyncHandler(async (req: any, res: any) => {
+    try {
+      const gameController = new GameController();
+      const gameId = req.body.params.gameId;
+      const game = await gameController.get(gameId);
+      const action = 'bet';
+      const playersArray = game.players;
+      const updatedRoundArray = game.round === 1 ? game.roundOneMoves : game.roundTwoMoves;
+      const round = game.round;
+      const startNextRound = updateGame(game, playersArray, updatedRoundArray, action, round);
+
+      //perform check that user has enough to bet
+
+      const update = {
+        players: playersArray,
+        [game.round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
+        bet: req.body.params.bet
+      };
+
+      if (startNextRound) {
+        update.roundCount = 2;
+      }
+
+      const updatedGame = await gameController.updateGame(gameId, update);
+
+    }
+    catch (error) {
+      console.log('Error! Could not process check')
+    }
+  }));
+
+  app.put('/api/game/call', asyncHandler(async (req: any, res: any) => {
+    try {
+      const gameController = new GameController();
+      const gameId = req.body.params.gameId;
+      const game = await gameController.get(gameId);
+      const action = 'call';
+
+      //players cannot check if a bet has been made
+      if (game.bet === 0) {
+        return res.json(errorFunction(true, "Error: cannot call if bet has not been placed")); 
+      }
+
+      const playersArray = game.players;
+      const updatedRoundArray = game.round === 1 ? game.roundOneMoves : game.roundTwoMoves;
+      const round = game.round;
+      const startNextRound = updateGame(game, playersArray, updatedRoundArray, action, round);
+
+      const update = {
+        players: playersArray,
+        [game.round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
+        bet: game.bet * 2
+      };
+
+      if (startNextRound) {
+        update.roundCount = 2;
+      }
+
+      const updatedGame = await gameController.updateGame(gameId, update);
+
+      res.json({
+        game: updatedGame
+      });
+    }
+    catch (error) {
+      console.log('Error! Could not process check')
+    }
+  }));
+
+  app.put('/api/game/raise', asyncHandler(async (req: any, res: any) => {
+    try {
+      const gameController = new GameController();
+      const gameId = req.body.params.gameId;
+      const raise = req.body.params.raise;
+      const game = await gameController.get(gameId);
+      const action = 'raise';
+
+      //players cannot check if a bet has been made
+      if (game.bet === 0) {
+        console.log("Error: cannot raise if bet has not been placed");
+        return res.json(errorFunction(true, "Error: cannot raise if bet has not been placed")); 
+      }
+
+      const playersArray = game.players;
+      const updatedRoundArray = game.round === 1 ? game.roundOneMoves : game.roundTwoMoves;
+      const round = game.round;
+      const startNextRound = updateGame(game, playersArray, updatedRoundArray, action, round, raise);
+
+      const update = {
+        players: playersArray,
+        [game.round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
+        bet: (game.bet * 2) + raise
+      };
+
+      if (startNextRound) {
+        update.roundCount = 2;
+      }
+
+      const updatedGame = await gameController.updateGame(gameId, update);
+
+      res.json({
+        game: updatedGame
+      });
     }
     catch (error) {
       console.log('Error! Could not process check')

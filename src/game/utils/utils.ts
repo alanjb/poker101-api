@@ -71,23 +71,39 @@ export const shuffleDeck = () => {
   return deck;
 }
 
-export const updateGame = (playersArray: Player[], updatedRoundArray: string[], action: string) => {
-  let isNextRound: boolean;
+export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray: string[], action: string, round: number, raise?) => {
+  let startNextRound: boolean;
+  let index;
 
-  playersArray.forEach((player, i) => {
-    if (player.isTurn) {
-      updatedRoundArray[i] = action;
-      playersArray[i].isTurn = false;
+  playersArray.find((player, i) => {
+    if (player.isTurn === true) {
+      index = i;
+
+      if(action === 'call') {
+        player.points = player.points - game.bet;
+      }
+
+      if(action === 'raise') {
+        player.points = player.points - (game.bet + raise);
+      }      
       
-      //if reached last player
-      if (playersArray.length === i + 1) {
-        playersArray[0].isTurn = true;
-        isNextRound = true;
-      }
-      else {
-        playersArray[i+1].isTurn = true;
-      }
+      return;
     }
   });
-  return isNextRound;
+
+  updatedRoundArray[index] = action;
+  playersArray[index].isTurn = false;
+
+  if (playersArray.length === index+1) {
+    playersArray[0].isTurn = true;
+  }
+  else {
+    playersArray[index + 1].isTurn = true;
+    
+    if(round === 1 && index + 1 === 1) {
+      startNextRound = true;
+    }
+  }
+
+  return startNextRound;
 }

@@ -1,5 +1,3 @@
-import { Player } from "../../player/models/Player";
-
 export const CARD_REGEX = /^(Ace|Jack|Queen|King|2|3|4|5|6|7|8|9|10)( of )(Clubs|Diamonds|Hearts|Spades)$/;
 
 export const errorFunction = (errorBit, msg, data?) => {

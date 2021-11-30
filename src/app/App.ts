@@ -50,20 +50,6 @@ class App {
     const mongoDB = process.env.CONNECTION_STRING;
     const mongoose = require('mongoose');
     const db = mongoose.connection;
-
-    if (!mongoDB) {
-      //log m
-      throw new Error(
-        ""
-    );
-    }
-
-    if (!mongoose) {
-      //log m
-      throw new Error(
-        ""
-      );
-    }
     
     mongoose
       .connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })

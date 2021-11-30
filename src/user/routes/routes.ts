@@ -40,7 +40,6 @@ export function initUserRoutes(app: express.Application) {
       const userController = new UserController();
 
       const newUser = new UserModel({
-        id: 'test1', //requires id here for validation but is generated
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,

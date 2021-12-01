@@ -45,7 +45,7 @@ export default class GameController {
    */ 
   public async addPlayer(id, update) {
     try {
-      return await GameModel.findByIdAndUpdate(id, update);
+      return await GameModel.findByIdAndUpdate(id, update, {new: true});
     }
     catch (error) {
       return error;
@@ -59,7 +59,7 @@ export default class GameController {
    */ 
   public async start(id, update) {
     try {
-      return await GameModel.findByIdAndUpdate(id, update); 
+      return await GameModel.findByIdAndUpdate(id, update, {new: true}); 
     } catch (error) {
       return error
     }
@@ -72,7 +72,7 @@ export default class GameController {
    */ 
   public async updateGame(id, update) {
     try {
-      return await GameModel.findByIdAndUpdate(id, update);
+      return await GameModel.findByIdAndUpdate(id, update, {new: true});
     } catch (error) {
       return error;
     }

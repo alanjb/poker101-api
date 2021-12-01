@@ -71,36 +71,43 @@ export const shuffleDeck = () => {
   return deck;
 }
 
-export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray: string[], action: string, round: number, raise?) => {
+export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray: string[], action: string, round: number, amount?: number) => {
   let startNextRound: boolean;
-  let index;
+  let index: number;
 
-  playersArray.find((player, i) => {
-    if (player.isTurn === true) {
+  for (let i = 0; i < playersArray.length; i++){
+    if (playersArray[i].isTurn === true) {
       index = i;
 
+      if (action === 'bet') {
+        playersArray[i].points = playersArray[i].points - amount;
+      }
+
       if(action === 'call') {
-        player.points = player.points - game.bet;
+        playersArray[i].points = playersArray[i].points - game.bet;
       }
 
       if(action === 'raise') {
-        player.points = player.points - (game.bet + raise);
+        playersArray[i].points = playersArray[i].points - (game.bet + amount);
       }      
       
-      return;
+      break;
     }
-  });
+  }
 
   updatedRoundArray[index] = action;
+
+  //it will not be this players turn anymore
   playersArray[index].isTurn = false;
 
+  //if we reach end of array, loop back to dealer
   if (playersArray.length === index+1) {
     playersArray[0].isTurn = true;
   }
   else {
-    playersArray[index + 1].isTurn = true;
+    playersArray[index+1].isTurn = true;
     
-    if(round === 1 && index + 1 === 1) {
+    if (round === 1 && index+1 === 1 && playersArray[1] !== null) {
       startNextRound = true;
     }
   }

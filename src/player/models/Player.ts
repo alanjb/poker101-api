@@ -17,6 +17,7 @@ export const PlayerSchema = new mongoose.Schema({
   },
   hand: {
     type: [CardSchema],
+    required: true,
     validate: {
       validator: function(v) {
         return v => Array.isArray(v) && v.length == 5;
@@ -32,7 +33,6 @@ export const PlayerSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true
   },
 });
 

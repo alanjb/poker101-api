@@ -1,8 +1,16 @@
-import { User } from '../models/User';
+import { UserModel } from '../models/User';
 
 export default class UserController {
-  public getUser(email) {
-    return User
+  public async getById(id) {
+    try {
+      return await UserModel.findById(id);
+    } catch (error) {
+      return error;
+    }
+  }
+
+  public async getByEmail(email) {
+    return UserModel
       .findOne({email})
       .then((response) => {
         return response;
@@ -12,16 +20,11 @@ export default class UserController {
       });
   }
 
-  public create(user) {
-    return User
-      .create(user)
-      .then((response) => {
-        console.log("Success! User created.");
-        return response;
-      })
-      .catch((response) => {
-        console.log("Error! User could not be created.");
-        return response;
-      }) 
+  public async create(user) {
+    try {
+      return await UserModel.create(user);
+    } catch (error) {
+      return error;
+    }
   }
 }

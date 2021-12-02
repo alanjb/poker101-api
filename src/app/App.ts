@@ -53,13 +53,9 @@ class App {
   private static initMiddleware(): void {
     console.log("Initializing server middleware...");
 
-    if (!this.app) {
-      //log server creation error
-    }
-
     //helmet
     this.app.use(logger('dev'));
-    this.app.use(cors())
+    this.app.use(cors());
     this.app.use(express.urlencoded({ extended: true }))
     this.app.use(express.json());
     this.app.use(function (req: any, res: any, next: any) {
@@ -78,20 +74,6 @@ class App {
     const mongoDB = process.env.CONNECTION_STRING;
     const mongoose = require('mongoose');
     const db = mongoose.connection;
-
-    if (!mongoDB) {
-      //log m
-      throw new Error(
-        ""
-    );
-    }
-
-    if (!mongoose) {
-      //log m
-      throw new Error(
-        ""
-      );
-    }
     
     mongoose
       .connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })

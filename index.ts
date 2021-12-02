@@ -7,7 +7,7 @@ const app = App.buildApp();
 
 if (!app) {
     throw new Error(
-        "Error: Couldn't load app..."
+        "Error: Couldn't build app..."
     );
 }
 
@@ -15,7 +15,7 @@ const server = http.createServer(app);
 
 if (!server) {
     throw new Error(
-        "Error: Couldn't load server..."
+        "Error: Couldn't start server..."
     );
 }
 

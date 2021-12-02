@@ -2,7 +2,7 @@
 
 ## Game Description 
 Poker101 allows users to play 5 Draw Poker
-- Users can create a profile by signing up, 
+- Users can create a profile by signing up
 - Sign in once the profile is created 
 - Create games and invite players
 - Join existing game
@@ -30,9 +30,9 @@ Run `npm run start` in root directory. The server will use http://localhost:8000
 ## API Methods 
 
 ### Game - /api/game
-- createGame()
-- getGame()
-- getGames()
+- create()
+- get()
+- getAll()
 - check()
 - bet()
 - call()

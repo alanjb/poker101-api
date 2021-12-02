@@ -1,6 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
-import { PlayerSchema } from "./Player";
-import { CardSchema } from "./Card";
+import { Player, PlayerSchema } from "../../player/models/Player";
+import { Card, CardSchema } from "./Card";
 
 export const GameSchema = new Schema({
   pot: {
@@ -48,7 +48,25 @@ export const GameSchema = new Schema({
     min: 0,
     max: 1000000,
     required: true
-  }
+  },
+  roundOneMoves: {
+    type: Array
+  },
+  roundTwoMoves: {
+    type: Array
+  },
 });
 
-export const Game = mongoose.model("Game", GameSchema);
+export const GameModel = mongoose.model("Game", GameSchema);
+
+export interface Game {
+  pot: number;
+  roundCount: number;
+  status: string;
+  players: Player[];
+  deck: Card[];
+  requiredPointsPerPlayer: number;
+  anteAmount: number;
+  roundOneMoves: string[]
+  roundTwoMoves: string[];
+}

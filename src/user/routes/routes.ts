@@ -1,6 +1,6 @@
 import UserController from '../controllers/UserController';
 import express from "express";
-import { User } from "../models/User";
+import { UserModel } from "../models/User";
 import middleware from '../../app/middleware/middleware';
 
 export function initUserRoutes(app: express.Application, passport: any) {
@@ -28,9 +28,10 @@ export function initUserRoutes(app: express.Application, passport: any) {
       const userController = new UserController();
       
       return userController
-        .getUser(req.query.email)
+        .getByEmail(req.query.email)
         .then((user) => {
-          if (user == null) {
+          //do instanceof here?
+          if (!user) {
             console.log("User not found, signing user up");
             res.json({
               user: user
@@ -55,8 +56,7 @@ export function initUserRoutes(app: express.Application, passport: any) {
     try {
       const userController = new UserController();
 
-      const newUser = new User({
-        id: 'test1', //requires id here for validation but is generated
+      const newUser = new UserModel({
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,

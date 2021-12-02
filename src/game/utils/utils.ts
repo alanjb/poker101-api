@@ -79,17 +79,13 @@ export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray
     if (playersArray[i].isTurn === true) {
       index = i;
 
-      if (action === 'bet') {
-        playersArray[i].points = playersArray[i].points - amount;
-      }
+      // if(action === 'call') {
+      //   playersArray[i].points = playersArray[i].points - game.bet;
+      // }
 
-      if(action === 'call') {
-        playersArray[i].points = playersArray[i].points - game.bet;
-      }
-
-      if(action === 'raise') {
-        playersArray[i].points = playersArray[i].points - (game.bet + amount);
-      }      
+      // if(action === 'raise') {
+      //   playersArray[i].points = playersArray[i].points - (game.bet + amount);
+      // }      
       
       break;
     }
@@ -107,6 +103,7 @@ export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray
   else {
     playersArray[index+1].isTurn = true;
     
+    //fix this
     if (round === 1 && index+1 === 1 && playersArray[1] !== null) {
       startNextRound = true;
     }

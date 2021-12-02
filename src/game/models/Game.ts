@@ -49,9 +49,6 @@ export const GameSchema = new Schema({
     max: 1000000,
     required: true
   },
-  bet: {
-    type: Number,
-  },
   roundOneMoves: {
     type: Array
   },
@@ -70,7 +67,6 @@ export interface Game {
   deck: Card[];
   requiredPointsPerPlayer: number;
   anteAmount: number;
-  bet: number;
   roundOneMoves: string[]
   roundTwoMoves: string[];
 }

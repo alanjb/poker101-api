@@ -1,6 +1,4 @@
-import { Player } from "../models/Player";
-
-export default class GameController {
+export default class PlayerController {
   public async create(player) {
     try {
       return await player.save();

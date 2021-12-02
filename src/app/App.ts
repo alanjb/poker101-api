@@ -1,6 +1,9 @@
 import express from 'express';
 import logger from 'morgan';
 import cors from 'cors';
+import passport from 'passport';
+import {Strategy as LocalStrategy} from 'passport-local';
+
 import { initGameRoutes } from '../game/routes/routes';
 import { initUserRoutes } from '../user/routes/routes';
 import middleware from './middleware/middleware';
@@ -16,8 +19,9 @@ class App {
     console.log("Starting build...");
 
     this.initExpress();
-    this.initMiddleware();
     this.initDatabase();
+    this.initPassport();
+    this.initMiddleware();
     this.initRoutes();
 
     return this.start();
@@ -26,6 +30,23 @@ class App {
   private static initExpress() {
     console.log("Creating node server...");
     this.app = express();
+  }
+
+
+
+  private static initPassport(): void {
+    passport.use(new LocalStrategy(
+       function(username, password, done) {
+         console.log("username", username);
+         console.log("password", password);
+
+         // we didn't check username and password against db.
+         // we should add this  logic
+
+         let user = {username: username, password: password};
+         done(null, user);
+       }
+    ));
   }
 
   // Configure Express middleware.
@@ -42,6 +63,9 @@ class App {
       res.header("Access-Control-Allow-Headers", "Content-Type");
       next();
     });
+
+    this.app.use(passport.initialize());
+    // this.app.use(passport.session())
   }
 
   private static initDatabase() {
@@ -73,7 +97,7 @@ class App {
     });
 
     initGameRoutes(app);
-    initUserRoutes(app);
+    initUserRoutes(app, passport);
   }
 
   private static start() {

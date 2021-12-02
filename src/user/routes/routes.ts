@@ -3,8 +3,25 @@ import express from "express";
 import { UserModel } from "../models/User";
 import middleware from '../../app/middleware/middleware';
 
-export function initUserRoutes(app: express.Application) {
+export function initUserRoutes(app: express.Application, passport: any) {
   console.log('- Initializing user routes');
+
+  app.post('/api/login', (req: any, res: any) => {
+    passport.authenticate('local', function(err, user, info) {
+      console.log(err, user, info);
+      if(err) {
+        return res.json({
+          message: err
+        });
+      }
+      if( !user ) {
+        return res.json({
+          message: info
+        })
+      }
+      return res.json(user);
+    })(req, res);
+  });
 
   app.get('/api/user/user', (req: any, res: any) => {
     try {

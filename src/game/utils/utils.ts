@@ -2,6 +2,8 @@ import { Card } from "../models/Card";
 import { Player } from "../../player/models/Player";
 import { Game } from "../models/Game";
 
+export const handSize: number = 5;
+
 export const deck: Card[] = [
   { symbol: 'diamond', suit: '2' },
   { symbol: 'diamond', suit: '3' },

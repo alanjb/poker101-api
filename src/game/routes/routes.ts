@@ -3,11 +3,13 @@ import { errorFunction } from "../../app/config/utils";
 import { GameModel } from "../models/Game";
 import { PlayerModel } from "../../player/models/Player";
 import GameController from '../controllers/GameController';
+import CardController from '../controllers/CardController';
 import asyncHandler from "express-async-handler";
 import UserController from "../../user/controllers/UserController";
 import { shuffleDeck, updateGame, handSize } from '../utils/utils';
 import PlayerController from "../../player/controllers/PlayerController";
 import { UserModel } from "../../user/models/User";
+import e from "express";
 
 export function initGameRoutes(app: express.Application) {
   console.log('- Initializing game routes');
@@ -204,12 +206,22 @@ export function initGameRoutes(app: express.Application) {
       const gameId = req.body.params.gameId;
       const game = await gameController.get(gameId);
       
+      let deck;
+      const cardController = new CardController();
+      const existingCards : any = await cardController.getAll();
+      if(existingCards.length != 52) {
+          deck = await cardController.create();
+      } else {
+        deck = existingCards;
+      }
+      console.log(deck)
+
       if (!(game instanceof GameModel)) {
         console.log("Error: database could not find game: " + game);
         return res.json(errorFunction(true, "Error: game does not exist \n\n" + game));
       }
 
-      const shuffledDeck = shuffleDeck();
+      const shuffledDeck = shuffleDeck(deck);
       const updatedPlayersArray = game.players;
       let potAmount: number = 0;
 

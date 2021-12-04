@@ -26,7 +26,7 @@ export function initGameRoutes(app: express.Application) {
       
     }
     catch(error) {
-      res.json(errorFunction(true, "Error: Could not start game: " + error));
+      return res.json(errorFunction(true, "Error: Could not start game"));
     }
   }));
 
@@ -42,7 +42,7 @@ export function initGameRoutes(app: express.Application) {
     }
     catch (error) {
       console.log("Error: Could not get games \n\n " + error);
-      res.json(errorFunction(true, "Error: Could not get games \n\n " + error));
+      res.json(errorFunction(true, "Error: Could not get games"));
     }
   }));
 
@@ -50,19 +50,22 @@ export function initGameRoutes(app: express.Application) {
     try {
       const userController = new UserController();
       const userResponse = await userController.getById(req.body.userId);
-
+  
       if (!(userResponse instanceof UserModel)) {
         console.log("Error: database could not find user: " + userResponse);
-        return res.json(errorFunction(true, "Error: database could not find user: " + userResponse));
+        return res.json(errorFunction(true, "Error: database could not find user"));
       }
 
+      const requiredPointsPerPlayer = Number.parseInt(req.body.game.requiredPointsPerPlayer);
+      const anteAmount = Number.parseInt(req.body.game.anteAmount);
+
       //require that user creating game has enough points 
-      if (userResponse.points < req.body.game.requiredPointsPerPlayer || userResponse.points < req.body.game.anteAmount * 3) {
+      if (userResponse.points < requiredPointsPerPlayer || userResponse.points < anteAmount * 3) {
         console.log("Error: User creating this game does not have enough points");
         return res.json(errorFunction(true, "Error: User creating this game does not have enough points"));
       }
 
-      if (req.body.game.requiredPointsPerPlayer <= req.body.game.anteAmount) {
+      if (requiredPointsPerPlayer <= anteAmount) {
         console.log("Error: Required points must be greater than ante");
         return res.json(errorFunction(true, "Error: Required points must be greater than ante"));
       }
@@ -81,8 +84,8 @@ export function initGameRoutes(app: express.Application) {
       const newPlayerResponse = await playerController.create(dealer);
 
       if (!(newPlayerResponse instanceof PlayerModel)) {
-        console.log("Error: database could not create player");
-        return res.json(errorFunction(true, "Error: database could not create player \n\n" + newPlayerResponse));
+        console.log("Error: database could not create player \n\n" + newPlayerResponse);
+        return res.json(errorFunction(true, "Error: database could not create player"));
       }
 
       const newPlayerArray = [];
@@ -105,14 +108,14 @@ export function initGameRoutes(app: express.Application) {
 
       if (!(createdGame instanceof GameModel)) {
         console.log("Error: database could not create game: " + createdGame);
-        return res.json(errorFunction(true, "Error: database could not create game \n\n" + createdGame));
+        return res.json(errorFunction(true, "Error: database could not create game"));
       }
 
       return res.json({game: createdGame});
     }
     catch (error) {
       console.log("Error: There was a problem creating the game \n\n" + error);
-      res.json(errorFunction(true, "Error: There was a problem creating the game \n\n" + error));
+      return res.json(errorFunction(true, "Error: There was a problem creating the game"));
     }
   }));
 
@@ -127,14 +130,14 @@ export function initGameRoutes(app: express.Application) {
 
       if (!(game instanceof GameModel)) {
         console.log("Error: database could not find game: " + game);
-        return res.json(errorFunction(true, "Error: game does not exist \n\n" + game));
+        return res.json(errorFunction(true, "Error: game does not exist"));
       }
 
       const user = await userController.getById(userId);
 
       if (!(user instanceof UserModel)) {
         console.log("Error: database could not find user: " + game);
-        return res.json(errorFunction(true, "Error: user does not exist \n\n" + game));
+        return res.json(errorFunction(true, "Error: user does not exist"));
       }
 
       let playerExistsInGame: boolean;
@@ -173,7 +176,7 @@ export function initGameRoutes(app: express.Application) {
 
       if (!(newPlayer instanceof PlayerModel)) {
         console.log("Error: database could not create player \n\n " + newPlayer);
-        return res.json(errorFunction(true, "Error: database could not create player \n\n " + newPlayer));
+        return res.json(errorFunction(true, "Error: database could not create player"));
       }
 
       const update = {
@@ -187,7 +190,7 @@ export function initGameRoutes(app: express.Application) {
 
       if (!(updatedGame instanceof GameModel)) {
         console.log("Error: database could not update game \n\n " + updatedGame);
-        return res.json(errorFunction(true, "Error: database could not update game \n\n " + updatedGame));
+        return res.json(errorFunction(true, "Error: database could not update game"));
       }
 
       console.log('Successfully added player to game...')
@@ -196,7 +199,7 @@ export function initGameRoutes(app: express.Application) {
     }
     catch (error) {
       console.log("Error: There was an issue adding player to game \n\n " + error)
-      return res.json(errorFunction(true, "Error: There was an issue adding player to game \n\n " + error)); 
+      return res.json(errorFunction(true, "Error: There was an issue adding player to game")); 
     }
   }));
 
@@ -218,7 +221,7 @@ export function initGameRoutes(app: express.Application) {
 
       if (!(game instanceof GameModel)) {
         console.log("Error: database could not find game: " + game);
-        return res.json(errorFunction(true, "Error: game does not exist \n\n" + game));
+        return res.json(errorFunction(true, "Error: game does not exist"));
       }
 
       const shuffledDeck = shuffleDeck(deck);
@@ -253,7 +256,7 @@ export function initGameRoutes(app: express.Application) {
 
       if (!(gameStartedResponse instanceof GameModel)) {
         console.log("Error: database could not start game: " + gameStartedResponse);
-        return res.json(errorFunction(true, "Error: database could not start game: " + gameStartedResponse));
+        return res.json(errorFunction(true, "Error: database could not start game"));
       }
 
       console.log('Success: game created');
@@ -263,6 +266,7 @@ export function initGameRoutes(app: express.Application) {
       })
     }
     catch (error) {
+      console.log('Error: There was an issue starting the game')
       return res.json(errorFunction(true, "Error! There was an issue starting the game"));
     }
   }));
@@ -272,10 +276,19 @@ export function initGameRoutes(app: express.Application) {
       const gameController = new GameController();
       const gameId = req.body.params.gameId;
       const game = await gameController.get(gameId);
+
+      if (!(game instanceof GameModel)) {
+        console.log("Error: database could not find game: " + game);
+        return res.json(errorFunction(true, "Error: game does not exist"));
+      }
+
+      //check if raise has been made
+      if (game.raise !== 0) {
+        console.log("Error: player cannot : " + game);
+        return res.json(errorFunction(true, "Error: game does not exist"));
+      }
+
       const action = 'check';
-
-      //check if bet here
-
       const playersArray = game.players;
       const round = game.roundCount;
       const updatedRoundArray = round === 1 ? game.roundOneMoves : game.roundTwoMoves;
@@ -300,7 +313,7 @@ export function initGameRoutes(app: express.Application) {
       }
       else {
         console.log('Error: Database could not save check');
-        return res.json(errorFunction(true, "Error: cannot check if bet has been placed - " + updatedGame)); 
+        return res.json(errorFunction(true, "Error: cannot check if bet has been placed")); 
       }
     }
     catch (error) {
@@ -316,10 +329,7 @@ export function initGameRoutes(app: express.Application) {
       const action = 'call';
       const round = game.roundCount;
 
-      //players cannot check if a bet has been made
-      // if (game.bet === 0) {
-      //   return res.json(errorFunction(true, "Error: cannot call if bet has not been placed")); 
-      // }
+      //players cannot call if there has not been a raise
 
       const playersArray = game.players;
       const updatedRoundArray = round === 1 ? game.roundOneMoves : game.roundTwoMoves;
@@ -327,9 +337,7 @@ export function initGameRoutes(app: express.Application) {
 
       const update = {
         players: playersArray,
-        [game.round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
-        // bet: Number.parseInt(game.bet) * 2,
-        // pot: Number.parseInt(game.pot) + Number.parseInt(game.bet)
+        [round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
       };
 
       if (startNextRound) {
@@ -350,26 +358,27 @@ export function initGameRoutes(app: express.Application) {
   app.put('/api/game/raise', asyncHandler(async (req: any, res: any) => {
     try {
       const gameController = new GameController();
-      const gameId = req.body.params.gameId;
-      const raise = req.body.params.raise;
+      const gameId = req.body.gameId;
+      const raise = Number.parseInt(req.body.raise);
+
       const game = await gameController.get(gameId);
-      const action = 'raise';
 
-      //players cannot check if a bet has been made
-      // if (game.bet === 0) {
-      //   console.log("Error: cannot raise if bet has not been placed");
-      //   return res.json(errorFunction(true, "Error: cannot raise if bet has not been placed")); 
-      // }
+      //commonize this check
+      if (!(game instanceof GameModel)) {
+        console.log("Error: database could not find game: " + game);
+        return res.json(errorFunction(true, "Error: game does not exist"));
+      }
 
-      const playersArray = game.players;
-      const updatedRoundArray = game.round === 1 ? game.roundOneMoves : game.roundTwoMoves;
-      const round = game.round;
-      const startNextRound = updateGame(game, playersArray, updatedRoundArray, action, round, raise);
+      const move = 'raise';
+      const updatedPlayersArray = game.players;
+      const round = game.roundCount;
+      const updatedRoundArray = round === 1 ? game.roundOneMoves : game.roundTwoMoves;
+      const startNextRound = updateGame(game, updatedPlayersArray, updatedRoundArray, move, round, raise);
 
       const update = {
-        players: playersArray,
-        [game.round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
-        // bet: (game.bet * 2) + raise
+        players: updatedPlayersArray,
+        [round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
+        raise: raise
       };
 
       if (startNextRound) {
@@ -378,12 +387,20 @@ export function initGameRoutes(app: express.Application) {
 
       const updatedGame = await gameController.updateGame(gameId, update);
 
-      res.json({
+      if (!(updatedGame instanceof GameModel)) {
+        console.log("Error: database could not start game: " + updatedGame);
+        return res.json(errorFunction(true, "Error: database could not start game"));
+      }
+
+      console.log('Success: played raised: ' + raise);
+      
+      return res.json({
         game: updatedGame
       });
     }
     catch (error) {
       console.log('Error: Could not process raise')
+      return res.json(errorFunction(true, "Error: There was an issue processing raise"));
     }
   }));
   

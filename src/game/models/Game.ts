@@ -55,6 +55,10 @@ export const GameSchema = new Schema({
   roundTwoMoves: {
     type: Array
   },
+  raise: {
+    type: Number,
+    default: 0
+  }
 });
 
 export const GameModel = mongoose.model("Game", GameSchema);
@@ -69,4 +73,5 @@ export interface Game {
   anteAmount: number;
   roundOneMoves: string[]
   roundTwoMoves: string[];
+  raise: number;
 }

@@ -1,6 +1,7 @@
 import { Card } from "../models/Card";
 import { Player } from "../../player/models/Player";
 import { RoundMove } from "../models/RoundMove";
+import { Game } from "../models/Game";
 
 export const handSize: number = 5;
 
@@ -73,13 +74,17 @@ export const shuffleDeck = () => {
   return deck;
 }
 
-export const updateGame = (playersArray: Player[], updatedRoundArray: RoundMove[], move: string, round: number, raise?: number) => {
+export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray: RoundMove[], move: string, round: number, raise?: number) => {
   let startNextRound: boolean;
   let index: number;
 
   for (let i = 0; i < playersArray.length; i++){
     if (playersArray[i].isTurn === true) {
       index = i;
+
+      if(move === 'check') {
+        updatedRoundArray[index] = { move: move };
+      }  
 
       if(move === 'raise') {
         playersArray[i].points = playersArray[i].points - raise;
@@ -88,7 +93,7 @@ export const updateGame = (playersArray: Player[], updatedRoundArray: RoundMove[
 
       if (move === 'call') {
         playersArray[i].points = playersArray[i].points;
-        updatedRoundArray[index] = { move: move, bet: 0 }
+        updatedRoundArray[index] = { move: move, bet: game.raise }
       }
 
       break;

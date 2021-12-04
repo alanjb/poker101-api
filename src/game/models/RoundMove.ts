@@ -1,4 +1,4 @@
 export interface RoundMove {
   move: string;
-  bet: number;
+  bet?: number;
 }

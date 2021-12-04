@@ -263,14 +263,23 @@ export function initGameRoutes(app: express.Application) {
       const gameController = new GameController();
       const gameId = req.body.params.gameId;
       const game = await gameController.get(gameId);
-      const action = 'check';
+
+      if (!(game instanceof GameModel)) {
+        console.log("Error: database could not find game: " + game);
+        return res.json(errorFunction(true, "Error: game does not exist \n\n" + game));
+      }
 
       //check if raise has been made
-      
+      if (game.raise !== 0) {
+        console.log("Error: player cannot : " + game);
+        return res.json(errorFunction(true, "Error: game does not exist \n\n" + game));
+      }
+
+      const action = 'check';
       const playersArray = game.players;
       const round = game.roundCount;
       const updatedRoundArray = round === 1 ? game.roundOneMoves : game.roundTwoMoves;
-      const startNextRound = updateGame(playersArray, updatedRoundArray, action, round);
+      const startNextRound = updateGame(game, playersArray, updatedRoundArray, action, round);
 
       const update = {
         players: playersArray,
@@ -311,7 +320,7 @@ export function initGameRoutes(app: express.Application) {
 
       const playersArray = game.players;
       const updatedRoundArray = round === 1 ? game.roundOneMoves : game.roundTwoMoves;
-      const startNextRound = updateGame(playersArray, updatedRoundArray, action, round);
+      const startNextRound = updateGame(game, playersArray, updatedRoundArray, action, round);
 
       const update = {
         players: playersArray,
@@ -351,11 +360,12 @@ export function initGameRoutes(app: express.Application) {
       const updatedPlayersArray = game.players;
       const round = game.roundCount;
       const updatedRoundArray = round === 1 ? game.roundOneMoves : game.roundTwoMoves;
-      const startNextRound = updateGame(updatedPlayersArray, updatedRoundArray, move, round, raise);
+      const startNextRound = updateGame(game, updatedPlayersArray, updatedRoundArray, move, round, raise);
 
       const update = {
         players: updatedPlayersArray,
         [round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
+        raise: true
       };
 
       if (startNextRound) {

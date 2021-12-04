@@ -211,13 +211,15 @@ export function initGameRoutes(app: express.Application) {
       
       let deck;
       const cardController = new CardController();
-      const existingCards : any = await cardController.getAll();
+      const existingCards: any = await cardController.getAll();
+
+      //check if existCards is an error
+
       if(existingCards.length != 52) {
           deck = await cardController.create();
       } else {
         deck = existingCards;
       }
-      console.log(deck)
 
       if (!(game instanceof GameModel)) {
         console.log("Error: database could not find game: " + game);
@@ -239,10 +241,10 @@ export function initGameRoutes(app: express.Application) {
 
       //get un-shuffled deck from db, pass into shuffleDeck() and assign 5 cards to each player
       for (let i = 0; i < handSize; i++){
-        updatedPlayersArray.forEach((player, x) => {
-          player.hand.push(shuffledDeck[x]);
+        updatedPlayersArray.forEach(player => {
+          player.hand.push(shuffledDeck[0]);
           shuffledDeck.shift();
-        })
+        });
       }
 
       const update = {
@@ -261,7 +263,7 @@ export function initGameRoutes(app: express.Application) {
 
       console.log('Success: game created');
       
-      res.json({
+      return res.json({
         game: gameStartedResponse
       })
     }

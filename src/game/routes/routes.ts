@@ -354,7 +354,7 @@ export function initGameRoutes(app: express.Application) {
       //commonize this check
       if (!(game instanceof GameModel)) {
         console.log("Error: database could not find game: " + game);
-        return res.json(errorFunction(true, "Error: game does not exist \n\n" + game));
+        return res.json(errorFunction(true, "Error: game does not exist"));
       }
 
       const move = 'raise';

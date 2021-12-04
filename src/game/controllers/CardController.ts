@@ -4,8 +4,7 @@ import CardData from "../data/CardData";
 export default class CardController {
   public async getAll() {
     try {
-        return await CardModel
-        .find({});
+        return await CardModel.find({});
       }
       catch(error) {
         console.log("Database find error - could not fetch all cards");
@@ -15,8 +14,7 @@ export default class CardController {
 
   public async create() {
     try {
-    await CardModel
-      .insertMany(CardData);
+    await CardModel.insertMany(CardData);
     }
     catch(error) {
         console.log("Database save error - could not create cards");

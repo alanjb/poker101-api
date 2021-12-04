@@ -1,6 +1,6 @@
 import { Card } from "../models/Card";
 import { Player } from "../../player/models/Player";
-import { Game } from "../models/Game";
+import { RoundMove } from "../models/RoundMove";
 
 export const handSize: number = 5;
 
@@ -73,7 +73,7 @@ export const shuffleDeck = () => {
   return deck;
 }
 
-export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray: string[], action: string, round: number, amount?: number) => {
+export const updateGame = (playersArray: Player[], updatedRoundArray: RoundMove[], move: string, round: number, raise?: number) => {
   let startNextRound: boolean;
   let index: number;
 
@@ -81,34 +81,36 @@ export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray
     if (playersArray[i].isTurn === true) {
       index = i;
 
-      // if(action === 'call') {
-      //   playersArray[i].points = playersArray[i].points - game.bet;
-      // }
+      if(move === 'raise') {
+        playersArray[i].points = playersArray[i].points - raise;
+        updatedRoundArray[index] = { move: move, bet: raise };
+      }  
 
-      // if(action === 'raise') {
-      //   playersArray[i].points = playersArray[i].points - (game.bet + amount);
-      // }      
-      
+      if (move === 'call') {
+        playersArray[i].points = playersArray[i].points;
+        updatedRoundArray[index] = { move: move, bet: 0 }
+      }
+
       break;
     }
   }
 
-  updatedRoundArray[index] = action;
-
   //it will not be this players turn anymore
   playersArray[index].isTurn = false;
 
+  //go to players who checked to determine whether they want to call, raise or fold
+
   //if we reach end of array, loop back to dealer
-  if (playersArray.length === index+1) {
+  if (playersArray.length === index + 1) {
     playersArray[0].isTurn = true;
   }
   else {
-    playersArray[index+1].isTurn = true;
+    playersArray[index + 1].isTurn = true;
     
     //fix this
-    if (round === 1 && index+1 === 1 && playersArray[1] !== null) {
-      startNextRound = true;
-    }
+    // if (round === 1 && index+1 === 1 && playersArray[1] !== null) {
+    //   startNextRound = true;
+    // }
   }
 
   return startNextRound;

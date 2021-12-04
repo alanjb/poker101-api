@@ -113,7 +113,7 @@ export function initGameRoutes(app: express.Application) {
     }
     catch (error) {
       console.log("Error: There was a problem creating the game \n\n" + error);
-      res.json(errorFunction(true, "Error: There was a problem creating the game \n\n" + error));
+      return res.json(errorFunction(true, "Error: There was a problem creating the game"));
     }
   }));
 

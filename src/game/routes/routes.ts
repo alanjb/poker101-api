@@ -6,10 +6,9 @@ import GameController from '../controllers/GameController';
 import CardController from '../controllers/CardController';
 import asyncHandler from "express-async-handler";
 import UserController from "../../user/controllers/UserController";
-import { shuffleDeck, updateGame, handSize } from '../utils/utils';
+import { shuffleDeck, updateGame, handSize, emitUpdatedGame } from '../utils/utils';
 import PlayerController from "../../player/controllers/PlayerController";
 import { UserModel } from "../../user/models/User";
-import e from "express";
 
 export function initGameRoutes(app: express.Application) {
   console.log('- Initializing game routes');
@@ -125,6 +124,8 @@ export function initGameRoutes(app: express.Application) {
       const userController = new UserController();
       const gameId = req.body.params.gameId;
       const userId = req.body.params.userId;
+
+      //Promise.all, use date time
 
       const game = await gameController.get(gameId);
 
@@ -308,10 +309,7 @@ export function initGameRoutes(app: express.Application) {
       const updatedGame = await gameController.updateGame(gameId, update);
 
       if (updatedGame instanceof GameModel) {
-        //web sockets - send this to everyone
-        res.json({
-          game: updatedGame
-        });
+        emitUpdatedGame(game);
       }
       else {
         console.log('Error: Database could not save check');
@@ -319,7 +317,7 @@ export function initGameRoutes(app: express.Application) {
       }
     }
     catch (error) {
-      console.log('Error! Could not process check')
+      console.log('Error! Could not process check: ' + error)
     }
   }));
 

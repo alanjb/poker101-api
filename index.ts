@@ -1,30 +1,34 @@
 import App from './src/app/App';
 import http from 'http';
 import { serverPort } from './src/app/config/env.dev';
+import { startWS } from './src/game/utils/utils';
+require('dotenv').config();
 
-//start server
-const app = App.buildApp();
+(async function() {
+    try {
+        const app = await App.build();
 
-if (!app) {
-    throw new Error(
-        "Error: Couldn't build app..."
-    );
-}
+        if(!app) {
+            throw new Error('There was a problem building the app')
+        }
 
-const server = http.createServer(app);
+        const server = http.createServer(app);
 
-if (!server) {
-    throw new Error(
-        "Error: Couldn't start server..."
-    );
-}
+        if(!server) {
+            throw new Error('There was a problem building the server')
+        }
 
-//now listening for client requests 
-server.listen(serverPort);
+        startWS(server);
 
-server.on('listening', () => {
-    const addr = server.address();
-    const bind = (typeof addr === 'string') ? `pipe ${addr}` : `port ${addr.port}`;
+        server.listen(serverPort);
+        server.on('listening', () => {
+            const addr = server.address();
+            const bind = (typeof addr === 'string') ? `pipe ${addr}` : `port ${addr.port}`;
 
-    console.log('Listening on ' + bind + '...');
-});
+            console.log('Listening on ' + bind + '...');
+        });
+    }
+    catch (error) {
+        console.log("Error: " + error.message);
+    }
+})();

@@ -3,10 +3,8 @@ import logger from 'morgan';
 import cors from 'cors';
 import passport from 'passport';
 import {Strategy as LocalStrategy} from 'passport-local';
-
 import { initGameRoutes } from '../game/routes/routes';
 import { initUserRoutes } from '../user/routes/routes';
-import middleware from './middleware/middleware';
 
 // Creates and configures an Node web server. Prevents sub-typing of this class.
 class App {
@@ -15,41 +13,63 @@ class App {
   private static app: express.Application;
 
   //Run configuration methods 
-  public static buildApp() {
+  public static async build(): Promise<express.Application> {
     console.log("Starting build...");
 
-    this.initExpress();
-    this.initDatabase();
-    this.initPassport();
-    this.initMiddleware();
-    this.initRoutes();
+    try {
+      //initExpress and initDatabase are independent 
+      const [expressStarted, databaseStarted] = await Promise.all([
+        this.initExpress(),
+        this.initDatabase(),
+        // this.initPassport()
+      ]);
+      
+      if (!expressStarted) {
+        throw new Error('Error: Express could not start')
+      }
 
-    return this.start();
+      const [middleware, routes] = await Promise.all([
+        this.initMiddleware(),
+        this.initRoutes()
+      ]);
+
+      return this.start();
+    }
+    catch (error) {
+      console.log(error.message)
+    }
   }
 
-  private static initExpress() {
+  private static initExpress(): Promise<boolean | Error> {
     console.log("Creating node server...");
-    this.app = express();
+
+    return new Promise((resolve, reject) => {
+      this.app = express();
+
+      if (!this.app) {
+        reject(new Error('Error: Express failed to create app'));
+      }
+      else {
+        resolve(true);
+      }
+    });
   }
 
+  // private static initPassport(): void {
+  //   passport.use(new LocalStrategy(
+  //      function(username, password, done) {
+  //        console.log("username", username);
+  //        console.log("password", password);
 
+  //        // we didn't check username and password against db.
+  //        // we should add this  logic
 
-  private static initPassport(): void {
-    passport.use(new LocalStrategy(
-       function(username, password, done) {
-         console.log("username", username);
-         console.log("password", password);
+  //        let user = {username: username, password: password};
+  //        done(null, user);
+  //      }
+  //   ))
+  // }
 
-         // we didn't check username and password against db.
-         // we should add this  logic
-
-         let user = {username: username, password: password};
-         done(null, user);
-       }
-    ));
-  }
-
-  // Configure Express middleware.
   private static initMiddleware(): void {
     console.log("Initializing server middleware...");
 
@@ -68,42 +88,47 @@ class App {
     // this.app.use(passport.session())
   }
 
-  private static initDatabase() {
+  private static initDatabase(): Promise<boolean | Error> {
     console.log("Initializing database...");
 
-    const mongoDB = process.env.CONNECTION_STRING;
-    const mongoose = require('mongoose');
-    const db = mongoose.connection;
-    
-    mongoose
-      .connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
-      .then(() => {
-        console.log("Successfully initialized database...running at " + mongoDB);
-        db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-      })
-      .catch(error => {
-        console.log("Error: " + error);
-      })
+    return new Promise((resolve, reject) => {
+      try {
+        const mongoDB = process.env.CONNECTION_STRING;
+        const mongoose = require('mongoose');
+        const db = mongoose.connection;
+
+        mongoose
+          .connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
+          .then(() => {
+            console.log("Successfully initialized database...running at " + mongoDB);
+            db.on('error', console.error.bind(console, 'MongoDB connection error: '));
+            resolve(true);
+          })
+          .catch((error) => {
+            reject(new Error('Database could not connect \n\n ' + error));
+          });
+      }
+      catch (error) {
+        reject(new Error('Error: ' + error));
+      }
+    });
+
+
   }
 
-  private static initRoutes() {
+  private static initRoutes(): void {
     console.log("Initializing server routes...");
 
     const { app } = this;
 
-    //test route
-    app.get('/', middleware, (req, res) => {
-      res.send('swe681-game.net')
-    });
-
     initGameRoutes(app);
-    initUserRoutes(app, passport);
+    // initUserRoutes(app, passport);
   }
 
-  private static start() {
-    if (this.app) {
-      return this.app;
-    }
+  private static start(): express.Application {
+    const { app } = this;
+
+    return app;
   }
 }
 

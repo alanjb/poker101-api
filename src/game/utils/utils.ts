@@ -4,8 +4,9 @@ import { RoundMove } from "../models/RoundMove";
 import { Game } from "../models/Game";
 
 export const handSize: number = 5;
+let apiServer: any;
+let socketio: any;
 
-//The Fisher-Yates algorithm
 export const shuffleDeck = (deck: Card[]) => {
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -62,3 +63,50 @@ export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray
 
   return startNextRound;
 }
+
+export const startWS = (server) => {
+  console.log('Configuring web sockets...');
+
+  try {
+    const socketIO = require("socket.io");
+    const io = socketIO(server);
+    socketio = io;
+    let interval: any;
+    apiServer = server;
+
+    io.on("connection", (socket) => {
+      console.log("Client connected: " + socket.id);
+
+      if (interval) {
+        clearInterval(interval);
+      }
+
+      interval = setInterval(() => emitTimer(socket), 1000);
+
+      //if game updated, trigger emit
+      // emitUpdatedGame(game, socket);
+
+      socket.on("disconnect", (socket) => {
+        console.log("Client disconnected...");
+        clearInterval(interval);
+      });
+    })
+  }
+  catch(error) {
+    console.log('Error: ' + error)
+  }
+};
+
+export const emitUpdatedGame = (updatedGame) => {
+  try {
+    socketio.emit("getUpdatedGame", updatedGame);
+  }
+  catch(error) {
+    throw new Error('Error! Could not broadcast game update to clients: ' + error);
+  }
+};
+
+export const emitTimer = (socket: any) => {
+  const response = new Date();
+  socket.emit("getLobbyTimer", response);
+};

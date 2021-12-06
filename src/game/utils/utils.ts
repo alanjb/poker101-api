@@ -2,6 +2,7 @@ import { Card } from "../models/Card";
 import { Player } from "../../player/models/Player";
 import { RoundMove } from "../models/RoundMove";
 import { Game } from "../models/Game";
+import * as PokerEvaluator from 'poker-evaluator';
 
 export const handSize: number = 5;
 let apiServer: any;
@@ -110,3 +111,20 @@ export const emitTimer = (socket: any) => {
   const response = new Date();
   socket.emit("getLobbyTimer", response);
 };
+
+//@param All players
+//@return player with the best hand
+export const determineWinner = (players) => {
+  let playersRanks = players.map( (player, index) =>
+    PokerEvaluator.evalHand(player.hand.map(card => card.suit.charAt(0) + card.symbol.charAt(0))).value
+  )
+  // console.log(playersRanks)
+  let max = -1;
+  for (let i = 0; i < playersRanks.length; i++) {
+   if (playersRanks[i] > max)
+   max = playersRanks[i];
+  }
+// console.log(max)
+// console.log(players[playersRanks.indexOf(max)])
+  return players[playersRanks.indexOf(max)];
+}

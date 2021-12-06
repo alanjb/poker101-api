@@ -6,7 +6,7 @@ import GameController from '../controllers/GameController';
 import CardController from '../controllers/CardController';
 import asyncHandler from "express-async-handler";
 import UserController from "../../user/controllers/UserController";
-import { shuffleDeck, updateGame, handSize, emitUpdatedGame } from '../utils/utils';
+import { shuffleDeck, updateGame, handSize, emitUpdatedGame, determineWinner } from '../utils/utils';
 import PlayerController from "../../player/controllers/PlayerController";
 import { UserModel } from "../../user/models/User";
 
@@ -248,6 +248,7 @@ export function initGameRoutes(app: express.Application) {
         });
       }
 
+      // determineWinner(updatedPlayersArray)
       const update = {
         status: 'in progress',
         players: updatedPlayersArray,

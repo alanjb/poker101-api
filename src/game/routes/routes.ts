@@ -248,7 +248,6 @@ export function initGameRoutes(app: express.Application) {
         });
       }
 
-      // determineWinner(updatedPlayersArray)
       const update = {
         status: 'in progress',
         players: updatedPlayersArray,

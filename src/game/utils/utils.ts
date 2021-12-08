@@ -118,13 +118,10 @@ export const determineWinner = (players) => {
   let playersRanks = players.map( (player, index) =>
     PokerEvaluator.evalHand(player.hand.map(card => card.suit.charAt(0) + card.symbol.charAt(0))).value
   )
-  // console.log(playersRanks)
   let max = -1;
   for (let i = 0; i < playersRanks.length; i++) {
    if (playersRanks[i] > max)
    max = playersRanks[i];
   }
-// console.log(max)
-// console.log(players[playersRanks.indexOf(max)])
   return players[playersRanks.indexOf(max)];
 }

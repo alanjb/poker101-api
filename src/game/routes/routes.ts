@@ -6,7 +6,7 @@ import GameController from '../controllers/GameController';
 import CardController from '../controllers/CardController';
 import asyncHandler from "express-async-handler";
 import UserController from "../../user/controllers/UserController";
-import { shuffleDeck, updateGame, handSize, emitUpdatedGame, determineWinner } from '../utils/utils';
+import { shuffleDeck, updateGame, handSize, emitUpdatedGame, determineWinner, getSocketIO, emitTimer } from '../utils/utils';
 import PlayerController from "../../player/controllers/PlayerController";
 import { UserModel } from "../../user/models/User";
 
@@ -201,6 +201,42 @@ export function initGameRoutes(app: express.Application) {
     catch (error) {
       console.log("Error: There was an issue adding player to game \n\n " + error)
       return res.json(errorFunction(true, "Error: There was an issue adding player to game")); 
+    }
+  }));
+
+  app.put('/api/game/initlobbytimer',  asyncHandler(async (req: any, res: any) => {
+    try {
+      const gameController = new GameController();
+      const gameId = req.body.params.gameId;
+      const game = await gameController.get(gameId);
+      let interval;
+
+      if (!game.lobbytimerinit){
+        const initDate = new Date();
+        const update = { lobbytimerinit: initDate }
+        const updatedGame = await gameController.updateGame(gameId, update);
+
+        const  sockIO = getSocketIO();
+        let timer = Math.round((new Date().getTime() - initDate.getTime()) / 1000);
+        interval = setInterval(() => emitTimer(sockIO, initDate, gameId), 1000);
+
+        res.json({
+          game: updatedGame
+        })
+
+        // while (timer < 300){
+        //   timer = Math.round((new Date().getTime() - initDate.getTime()) / 1000);
+        //   console.log(timer)
+        // }
+      } else {
+        res.json({
+          game: game
+        });
+      }
+    }
+    catch (error) {
+      console.log("Error: Could not init lobby timer \n\n " + error);
+      res.json(errorFunction(true, "Error: Could not init lobby timer"));
     }
   }));
 

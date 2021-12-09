@@ -6,7 +6,7 @@ import GameController from '../controllers/GameController';
 import CardController from '../controllers/CardController';
 import asyncHandler from "express-async-handler";
 import UserController from "../../user/controllers/UserController";
-import { shuffleDeck, updateGame, handSize, emitUpdatedGame, determineWinner, getSocketIO, emitTimer } from '../utils/utils';
+import { shuffleDeck, updateGame, handSize, emitUpdatedGame, determineWinner, getSocketIO, emitTimer, clearEmits } from '../utils/utils';
 import PlayerController from "../../player/controllers/PlayerController";
 import { UserModel } from "../../user/models/User";
 
@@ -209,7 +209,7 @@ export function initGameRoutes(app: express.Application) {
       const gameController = new GameController();
       const gameId = req.body.params.gameId;
       const game = await gameController.get(gameId);
-      let interval;
+      let intervalId;
 
       if (!game.lobbytimerinit){
         const initDate = new Date();
@@ -217,17 +217,11 @@ export function initGameRoutes(app: express.Application) {
         const updatedGame = await gameController.updateGame(gameId, update);
 
         const  sockIO = getSocketIO();
-        let timer = Math.round((new Date().getTime() - initDate.getTime()) / 1000);
-        interval = setInterval(() => emitTimer(sockIO, initDate, gameId), 1000);
-
+        intervalId = setInterval(() => emitTimer(sockIO, initDate, gameId), 1000);
         res.json({
           game: updatedGame
         })
-
-        // while (timer < 300){
-        //   timer = Math.round((new Date().getTime() - initDate.getTime()) / 1000);
-        //   console.log(timer)
-        // }
+        clearEmits(sockIO, gameId, intervalId, initDate);
       } else {
         res.json({
           game: game

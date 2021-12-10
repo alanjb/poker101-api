@@ -1,26 +1,65 @@
 import UserController from '../controllers/UserController';
 import express from "express";
 import { UserModel } from "../models/User";
-import middleware from '../../app/middleware/middleware';
+import passport from 'passport';
+import { Strategy as LocalStrategy } from 'passport-local';
+import bcrypt from 'bcryptjs';
 
-export function initUserRoutes(app: express.Application, passport: any) {
+export function initUserRoutes(app: express.Application) {
   console.log('- Initializing user routes');
 
-  app.post('/api/login', (req: any, res: any) => {
-    passport.authenticate('local', function(err, user, info) {
-      console.log(err, user, info);
-      if(err) {
-        return res.json({
-          message: err
+  app.post('/api/user/login', (req: any, res: any) => {
+    const { username, password } = req.body.user;
+    const user = {username: username, password: password};
+    
+    // const user = new UserModel({
+    //   email: email,
+    //   username: username,
+    //   password: password
+    // });
+    
+    passport.use(new LocalStrategy(
+      function(username, password, done) {
+        UserModel.findOne({ username: username }, function(err, user) {
+          if (err) { return done(err); }
+          if (!user) {
+            return done(null, false, { message: 'Incorrect username.' });
+          }
+          if (!user.validPassword(password)) {
+            return done(null, false, { message: 'Incorrect password.' });
+          }
+          return done(null, user);
         });
       }
-      if( !user ) {
-        return res.json({
-          message: info
-        })
+    ));
+
+  });
+
+  app.post('/api/user/signup', (req: any, res: any) => {
+    const { email, username, password } = req.body.user;
+    // const user = {email, username, password};
+
+    UserModel.findOne({ username: username}, async (err, doc) => {
+      if (err) throw err;
+      if (doc) res.send("User Already Exists");
+      if (!doc) {
+        try {
+          const hashedPassword = await bcrypt.hash(password, 10);
+          const newUser = new UserModel({
+            email: email,
+            username: username,
+            password: hashedPassword,
+          });
+
+          await newUser.save();
+          res.send("User Created");
+        }
+        catch (error) {
+          console.log(error)
+        }
       }
-      return res.json(user);
-    })(req, res);
+    });
+
   });
 
   app.get('/api/user/user', (req: any, res: any) => {

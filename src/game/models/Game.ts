@@ -58,6 +58,9 @@ export const GameSchema = new Schema({
   raise: {
     type: Number,
     default: 0
+  },
+  lobbytimerinit: {
+    type: Date,
   }
 });
 

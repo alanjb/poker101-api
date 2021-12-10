@@ -65,6 +65,13 @@ export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray
   return startNextRound;
 }
 
+export const getSocketIO = () => {
+  if(socketio)
+    return socketio;
+  else 
+    console.error('Web Socket server not initialized')
+}
+
 export const startWS = (server) => {
   console.log('Configuring web sockets...');
 
@@ -81,8 +88,6 @@ export const startWS = (server) => {
       if (interval) {
         clearInterval(interval);
       }
-
-      interval = setInterval(() => emitTimer(socket), 1000);
 
       //if game updated, trigger emit
       // emitUpdatedGame(game, socket);
@@ -107,10 +112,20 @@ export const emitUpdatedGame = (updatedGame) => {
   }
 };
 
-export const emitTimer = (socket: any) => {
-  const response = new Date();
-  socket.emit("getLobbyTimer", response);
+export const emitTimer = (socket: any, initDate, gameId) => {
+  const timer = (new Date().getTime() - initDate.getTime()) / 1000;
+  socket.emit("getLobbyTimer", {gameId: gameId, timer: Math.round(timer)});
 };
+
+export const clearEmits = async (socket, gameId, intervalId, initDate) => {
+  let timer = (new Date().getTime() - initDate.getTime()) / 1000;
+  setTimeout(callOnTimerExpiry, 300000 - (timer*1000), socket, intervalId, gameId);
+};
+
+export const callOnTimerExpiry = (socket, intervalId, gameId) => {
+  clearInterval(intervalId);
+  socket.emit("LobbytTimerExpired", {gameId: gameId, LobbytTimerExpired: true});
+}
 
 //@param All players
 //@return player with the best hand

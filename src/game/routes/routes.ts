@@ -9,7 +9,6 @@ import UserController from "../../user/controllers/UserController";
 import { shuffleDeck, updateGame, handSize, emitUpdatedGame, determineWinner, getSocketIO, emitTimer, clearEmits } from '../utils/utils';
 import PlayerController from "../../player/controllers/PlayerController";
 import { UserModel } from "../../user/models/User";
-import { Card, CardModel } from "../../game/models/Card";
 
 export function initGameRoutes(app: express.Application) {
   console.log('- Initializing game routes');

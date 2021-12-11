@@ -4,7 +4,6 @@ import cors from 'cors';
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
-import {Strategy as LocalStrategy} from 'passport-local';
 import { initGameRoutes } from '../game/routes/routes';
 import { initUserRoutes } from '../user/routes/routes';
 
@@ -66,21 +65,22 @@ class App {
       credentials: true,
     }
     ));
-    this.app.use(express.urlencoded({ extended: true }))
+    this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
     this.app.use(session({
-      secret: 'secret',
+      secret: 'secretCode',
       resave: true,
       saveUninitialized: true
     })); 
-    this.app.use(cookieParser('secret'));
-    this.app.use(function (req: any, res: any, next: any) {
-      res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-      res.header("Access-Control-Allow-Headers", "Content-Type");
-      next();
-    });
+    this.app.use(cookieParser('secretCode'));
+    // this.app.use(function (req: any, res: any, next: any) {
+    //   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+    //   res.header("Access-Control-Allow-Headers", "Content-Type");
+    //   next();
+    // });
     this.app.use(passport.initialize());
-    this.app.use(passport.session())
+    this.app.use(passport.session());
+    require("./security/index")(passport);
   }
 
   private static initDatabase(): Promise<boolean | Error> {
@@ -115,7 +115,7 @@ class App {
     const { app } = this;
 
     initGameRoutes(app);
-    initUserRoutes(app);
+    initUserRoutes(app, passport);
   }
 
   private static start(): express.Application {

@@ -73,11 +73,11 @@ class App {
       saveUninitialized: true
     })); 
     this.app.use(cookieParser('secretCode'));
-    // this.app.use(function (req: any, res: any, next: any) {
-    //   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-    //   res.header("Access-Control-Allow-Headers", "Content-Type");
-    //   next();
-    // });
+    this.app.use(function (req: any, res: any, next: any) {
+      res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+      res.header("Access-Control-Allow-Headers", "Content-Type");
+      next();
+    });
     this.app.use(passport.initialize());
     this.app.use(passport.session());
     require("./security/index")(passport);

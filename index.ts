@@ -1,6 +1,5 @@
 import App from './src/app/App';
 import http from 'http';
-import { serverPort } from './src/app/config/env.dev';
 import { startWS } from './src/game/utils/utils';
 require('dotenv').config();
 
@@ -20,7 +19,7 @@ require('dotenv').config();
 
         startWS(server);
 
-        server.listen(serverPort);
+        server.listen(process.env.API_PORT);
         server.on('listening', () => {
             const addr = server.address();
             const bind = (typeof addr === 'string') ? `pipe ${addr}` : `port ${addr.port}`;

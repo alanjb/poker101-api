@@ -1,26 +1,84 @@
 import UserController from '../controllers/UserController';
-import express from "express";
 import { UserModel } from "../models/User";
-import middleware from '../../app/middleware/middleware';
+import bcrypt from 'bcryptjs';
+import { errorFunction } from '../../app/config/utils';
 
-export function initUserRoutes(app: express.Application, passport: any) {
+export function initUserRoutes(app, passport) {
   console.log('- Initializing user routes');
 
-  app.post('/api/login', (req: any, res: any) => {
-    passport.authenticate('local', function(err, user, info) {
-      console.log(err, user, info);
-      if(err) {
-        return res.json({
-          message: err
-        });
+  app.post("/api/user/login", (req, res, next) => {
+    const { username, password } = req.body;
+
+    console.log(username)
+    console.log(password)
+
+    passport.authenticate("local", (err, user, info) => {
+      try {
+        if (err) throw err;
+
+        if (!user) {
+          console.log("Error: User does not exist");
+          return res.json(errorFunction(true, "Error: Invalid username or password"));
+        }
+
+        if (user) {
+          console.log('Found user...');
+
+          req.logIn(user, (err) => {
+            console.log('logging in user: ' + user);
+            if (err) throw err;
+            
+            return res.json({
+              user: user
+            });
+          });
+        }
       }
-      if( !user ) {
-        return res.json({
-          message: info
-        })
+      catch (error) {
+        console.log('Error: There was an issue during user login \n\n ' + error);
+        return res.json(errorFunction(true, "Error: There was an issue during user login"));
       }
-      return res.json(user);
-    })(req, res);
+    })(req, res, next);
+  });
+
+  app.post('/api/user/signup', (req: any, res: any) => {
+    const { email, username, password } = req.body.user;
+
+    UserModel.findOne({ email: email, username: username }, async (error, doc) => {
+      try {
+        if (error) {
+          throw error;
+        }
+
+        console.log(doc)
+  
+        if (doc) {
+          console.log("Error: User already exists");
+          return res.json(errorFunction(true, "Error: User with this email or username already exists"));
+        }
+  
+        if (!doc) {
+          const hashedPassword = await bcrypt.hash(password, 10);
+          const newUser = new UserModel({
+            email: email,
+            username: username,
+            password: hashedPassword,
+          });
+
+          const newlyCreatedUser = await newUser.save();
+
+          console.log('User has been created')
+
+          return res.json({
+            user: newlyCreatedUser
+          })
+        }
+      }
+      catch (error) {
+        console.log('Error: There was an issue signing up user \n\n ' + error);
+        return res.json(errorFunction(true, "Error: User with this email or username already exists"));
+      }
+    });
   });
 
   app.get('/api/user/user', (req: any, res: any) => {

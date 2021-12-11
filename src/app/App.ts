@@ -2,7 +2,8 @@ import express from 'express';
 import logger from 'morgan';
 import cors from 'cors';
 import passport from 'passport';
-import {Strategy as LocalStrategy} from 'passport-local';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
 import { initGameRoutes } from '../game/routes/routes';
 import { initUserRoutes } from '../user/routes/routes';
 
@@ -21,7 +22,6 @@ class App {
       const [expressStarted, databaseStarted] = await Promise.all([
         this.initExpress(),
         this.initDatabase(),
-        // this.initPassport()
       ]);
       
       if (!expressStarted) {
@@ -55,37 +55,32 @@ class App {
     });
   }
 
-  // private static initPassport(): void {
-  //   passport.use(new LocalStrategy(
-  //      function(username, password, done) {
-  //        console.log("username", username);
-  //        console.log("password", password);
-
-  //        // we didn't check username and password against db.
-  //        // we should add this  logic
-
-  //        let user = {username: username, password: password};
-  //        done(null, user);
-  //      }
-  //   ))
-  // }
-
   private static initMiddleware(): void {
     console.log("Initializing server middleware...");
 
     //helmet
     this.app.use(logger('dev'));
-    this.app.use(cors());
-    this.app.use(express.urlencoded({ extended: true }))
+    this.app.use(cors({
+      origin: "http://localhost:3000", // <-- location of the react app were connecting to
+      credentials: true,
+    }
+    ));
+    this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
-    this.app.use(function (req: any, res: any, next: any) {
-      res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-      res.header("Access-Control-Allow-Headers", "Content-Type");
-      next();
-    });
-
+    this.app.use(session({
+      secret: 'secretCode',
+      resave: true,
+      saveUninitialized: true
+    })); 
+    this.app.use(cookieParser('secretCode'));
+    // this.app.use(function (req: any, res: any, next: any) {
+    //   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+    //   res.header("Access-Control-Allow-Headers", "Content-Type");
+    //   next();
+    // });
     this.app.use(passport.initialize());
-    // this.app.use(passport.session())
+    this.app.use(passport.session());
+    require("./security/index")(passport);
   }
 
   private static initDatabase(): Promise<boolean | Error> {
@@ -112,8 +107,6 @@ class App {
         reject(new Error('Error: ' + error));
       }
     });
-
-
   }
 
   private static initRoutes(): void {
@@ -122,7 +115,7 @@ class App {
     const { app } = this;
 
     initGameRoutes(app);
-    // initUserRoutes(app, passport);
+    initUserRoutes(app, passport);
   }
 
   private static start(): express.Application {

@@ -18,7 +18,11 @@ export const shuffleDeck = (deck: Card[]) => {
   return deck;
 }
 
-export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray: RoundMove[], move: string, round: number, raise?: number) => {
+export const resetTurns = (playersArray) => {
+  playersArray.forEach(player => player.isTurn=false)
+}
+
+export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray: RoundMove[], move: string, round: number, raise?: number, intermission?: boolean) => {
   let startNextRound: boolean;
   let index: number;
 
@@ -27,42 +31,87 @@ export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray
       index = i;
 
       if(move === 'check') {
-        updatedRoundArray[index] = { move: move };
+        updatedRoundArray[index] = { player: playersArray[i].email, move: move };
       }  
 
       if(move === 'raise') {
         playersArray[i].points = playersArray[i].points - raise;
-        updatedRoundArray[index] = { move: move, bet: raise };
+        updatedRoundArray[index] = { player: playersArray[i].email, move: move, bet: raise };
       }  
 
       if (move === 'call') {
         playersArray[i].points = playersArray[i].points;
-        updatedRoundArray[index] = { move: move, bet: game.raise }
+        updatedRoundArray[index] = { player: playersArray[i].email, move: move, bet: game.raise }
       }
 
       break;
     }
   }
 
-  //it will not be this players turn anymore
-  playersArray[index].isTurn = false;
+  if (!intermission) {
 
-  //go to players who checked to determine whether they want to call, raise or fold
+    //reached end of first round
+    if (round === 1 && playersArray[0].isTurn) {
 
-  //if we reach end of array, loop back to dealer
-  if (playersArray.length === index + 1) {
-    playersArray[0].isTurn = true;
+      //set intermission to true
+      intermission = true;  
+      
+      // set all to false
+      resetTurns(playersArray);
+
+      //handles first person who checked
+      for (let i = 0; i < game.roundOneMoves.length; i++) {
+        if (game.roundOneMoves[i].move === 'check') {
+          playersArray[i].isTurn = true;
+          break;
+        }
+      }
+      
+    } 
+    else {
+      //it will not be this players turn anymore
+      resetTurns(playersArray);
+
+      //if we reach end of array, loop back to dealer
+      if (playersArray.length === index + 1) {
+        playersArray[0].isTurn = true;
+      }
+      else {
+        //make sure this player did not folder, if they did go to next. 
+        playersArray[index + 1].isTurn = true;
+      }
+    }
   }
   else {
-    playersArray[index + 1].isTurn = true;
-    
-    //fix this
-    // if (round === 1 && index+1 === 1 && playersArray[1] !== null) {
-    //   startNextRound = true;
-    // }
-  }
+    let i: number;
 
-  return startNextRound;
+    resetTurns(playersArray);
+
+    for (i = 0; i < game.roundOneMoves.length; i++) {
+      if (game.roundOneMoves[i].move === 'check') {
+        playersArray[i].isTurn = true;
+        break;
+      }
+    }
+
+    if (i === game.roundOneMoves.length) {
+      intermission = false;
+      startNextRound = true;
+
+      //find first player in playersArray who is not dealer and who did not fold
+      for (let i = 0; i < playersArray.length; i++){
+        if (!playersArray[i].isDealer && !playersArray[i].folded) {
+          playersArray[i].isTurn = true;
+          break;
+        }
+      }
+    }
+  }
+  
+  return {
+    startNextRound: startNextRound,
+    intermission: intermission
+  }
 }
 
 export const getSocketIO = () => {
@@ -89,9 +138,6 @@ export const startWS = (server) => {
         clearInterval(interval);
       }
 
-      //if game updated, trigger emit
-      // emitUpdatedGame(game, socket);
-
       socket.on("disconnect", (socket) => {
         console.log("Client disconnected...");
         clearInterval(interval);
@@ -99,7 +145,7 @@ export const startWS = (server) => {
     })
   }
   catch(error) {
-    console.log('Error: ' + error)
+    console.log('Error: There was an issue starting web socket server \n\n' + error)
   }
 };
 
@@ -108,7 +154,7 @@ export const emitUpdatedGame = (updatedGame) => {
     socketio.emit("getUpdatedGame", updatedGame);
   }
   catch(error) {
-    throw new Error('Error! Could not broadcast game update to clients: ' + error);
+    throw new Error('Error: Could not broadcast game update to clients: ' + error);
   }
 };
 

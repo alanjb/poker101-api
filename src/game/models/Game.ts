@@ -1,6 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 import { Player, PlayerSchema } from "../../player/models/Player";
 import { Card, CardSchema } from "./Card";
+import { RoundMove } from './RoundMove';
 
 export const GameSchema = new Schema({
   pot: {
@@ -61,6 +62,9 @@ export const GameSchema = new Schema({
   },
   lobbytimerinit: {
     type: Date,
+  },
+  intermission: {
+    type: Boolean
   }
 });
 
@@ -74,7 +78,9 @@ export interface Game {
   deck: Card[];
   requiredPointsPerPlayer: number;
   anteAmount: number;
-  roundOneMoves: string[]
-  roundTwoMoves: string[];
+  roundOneMoves: RoundMove[]
+  roundTwoMoves: RoundMove[];
   raise: number;
+  lobbytimerinit: Date;
+  intermission: boolean;
 }

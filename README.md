@@ -24,6 +24,9 @@ mongoose
 npm 
 jest
 
+## API can be reached at
+swe681game-api.net
+
 ## To run the server locally
 Run `npm run start` in root directory. The server will use http://localhost:8000/.
 

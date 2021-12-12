@@ -1,5 +1,7 @@
+import { Player } from "../../player/models/Player";
+
 export interface RoundMove {
-  player: string;
+  player: Player;
   move: string;
   bet?: number;
 }

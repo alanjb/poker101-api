@@ -22,52 +22,80 @@ export const resetTurns = (playersArray) => {
   playersArray.forEach(player => player.isTurn=false)
 }
 
+const determineMove = (move, i, raise, game, playersArray: Player[]) => {
+  if(move === 'check') {
+    return { player: playersArray[i], move: move };
+  }  
+
+  if(move === 'raise') {
+    playersArray[i].points = playersArray[i].points - raise;
+    return { player: playersArray[i], move: move, bet: raise };
+  }  
+
+  if (move === 'call') {
+    playersArray[i].points = playersArray[i].points;
+    return { player: playersArray[i], move: move, bet: game.raise }
+  }
+
+  if (move === 'folded') {
+    playersArray[i].folded = true;
+    return { player: playersArray[i], move: move, bet: game.raise }
+  }
+}
+
 export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray: RoundMove[], move: string, round: number, raise?: number, intermission?: boolean) => {
   let startNextRound: boolean;
   let index: number;
+  const gameLog = [];
 
-  for (let i = 0; i < playersArray.length; i++){
-    if (playersArray[i].isTurn === true) {
-      index = i;
+  console.log('updatedRoundArray222')
+  console.log(updatedRoundArray)
 
-      if(move === 'check') {
-        updatedRoundArray[index] = { player: playersArray[i].email, move: move };
-      }  
+  index = playersArray.findIndex(player => player.isTurn);
 
-      if(move === 'raise') {
-        playersArray[i].points = playersArray[i].points - raise;
-        updatedRoundArray[index] = { player: playersArray[i].email, move: move, bet: raise };
-      }  
+  updatedRoundArray[index] = determineMove(move, index, raise, game, playersArray);
 
-      if (move === 'call') {
-        playersArray[i].points = playersArray[i].points;
-        updatedRoundArray[index] = { player: playersArray[i].email, move: move, bet: game.raise }
-      }
-
-      break;
-    }
+  let gameLogItem: any = {
+    player: playersArray[index], 
+    move: move
   }
 
+  if (raise) {
+    gameLogItem.bet = raise;
+  }
+  
+  gameLog.push(...game.gameLog, gameLogItem);
+  
   if (!intermission) {
 
     //reached end of first round
     if (round === 1 && playersArray[0].isTurn) {
 
+      let i = game.roundOneMoves.findIndex(roundMove => roundMove.move === 'check');
+
+      if (i == -1) {
+        resetTurns(playersArray);
+        i = playersArray.findIndex(player => !player.isDealer && !player.folded)
+        if (i !== -1)
+          playersArray[i].isTurn = true;
+        
+        return {
+          intermission: false, 
+          startNextRound: true,
+          gameLog: gameLog
+        }
+      } 
+      
       //set intermission to true
-      intermission = true;  
+      intermission = true;
       
       // set all to false
       resetTurns(playersArray);
 
       //handles first person who checked
-      for (let i = 0; i < game.roundOneMoves.length; i++) {
-        if (game.roundOneMoves[i].move === 'check') {
-          playersArray[i].isTurn = true;
-          break;
-        }
-      }
-      
-    } 
+      if( i !== -1)
+      playersArray[i].isTurn = true;
+    }
     else {
       //it will not be this players turn anymore
       resetTurns(playersArray);
@@ -77,7 +105,58 @@ export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray
         playersArray[0].isTurn = true;
       }
       else {
-        //make sure this player did not folder, if they did go to next. 
+        //we only care about folded players in round 2
+        if (round === 2) {
+          console.log('In round 2...')
+          const numFolded = playersArray.filter(player => player.folded).length;
+          const numMoved = updatedRoundArray.length;
+
+          if(playersArray.length == numFolded + numMoved) { 
+            console.log('End of round 2 - line 99');
+
+            const winner = determineWinner(playersArray.filter(player => !player.folded))
+
+            for (let i = 0; i < playersArray.length; i++) {
+              if (playersArray[i].email == winner.email) {
+                winner.points += game.pot;
+                playersArray[i]= winner;
+                break;
+              }
+            }
+
+            return {
+              startNextRound: false,
+              intermission: false,
+              winner: winner,
+              gameLog: gameLog
+            };
+          }
+          //make sure this player did not folder, if they did go to next. 
+
+          while (playersArray[index + 1].folded) {
+            if (index == playersArray.length) {
+              console.log('End of round 2 - line 121');
+
+              const winner = determineWinner(playersArray.filter(player => !player.folded))
+
+              for (let i = 0; i < playersArray.length; i++) {
+                if (playersArray[i].email == winner.email) {
+                  winner.points += game.pot;
+                  playersArray[i]= winner;
+                  break;
+                }
+              }
+
+              return {
+                startNextRound: false,
+                intermission: false,
+                winner: winner,
+                gameLog: gameLog
+              };
+            }
+            index++;
+          }
+        }
         playersArray[index + 1].isTurn = true;
       }
     }
@@ -87,30 +166,56 @@ export const updateGame = (game: Game, playersArray: Player[], updatedRoundArray
 
     resetTurns(playersArray);
 
-    for (i = 0; i < game.roundOneMoves.length; i++) {
-      if (game.roundOneMoves[i].move === 'check') {
-        playersArray[i].isTurn = true;
-        break;
-      }
-    }
-
-    if (i === game.roundOneMoves.length) {
+    i = game.roundOneMoves.findIndex(roundMove => roundMove.move === 'check')
+    if(i !== -1)
+    playersArray[i].isTurn = true;
+    
+    if (i === -1) {
       intermission = false;
       startNextRound = true;
 
       //find first player in playersArray who is not dealer and who did not fold
-      for (let i = 0; i < playersArray.length; i++){
-        if (!playersArray[i].isDealer && !playersArray[i].folded) {
-          playersArray[i].isTurn = true;
+      i = playersArray.findIndex(player => !player.isDealer && !player.folded)
+      if (i !== -1)
+      playersArray[i].isTurn = true;
+    }
+  }
+
+  if (round == 2) {
+    const numFolded = playersArray.filter(player => player.folded).length;
+    const numMoved = updatedRoundArray.length;
+
+    console.log(updatedRoundArray)
+
+    if (playersArray.length == numFolded + numMoved) {
+      console.log('End of round 2 - line 188');
+
+      console.log('line 173', numFolded)
+      console.log(numMoved)
+  
+      const winner = determineWinner(playersArray.filter(player => !player.folded))
+  
+      for (let i = 0; i < playersArray.length; i++) {
+        if (playersArray[i].email == winner.email) {
+          winner.points += game.pot;
+          playersArray[i]= winner;
           break;
         }
       }
+      
+      return {
+        startNextRound: false,
+        intermission: false,
+        winner: winner,
+        gameLog: gameLog
+      };
     }
   }
   
   return {
     startNextRound: startNextRound,
-    intermission: intermission
+    intermission: intermission,
+    gameLog: gameLog
   }
 }
 
@@ -176,9 +281,9 @@ export const callOnTimerExpiry = (socket, intervalId, gameId) => {
 //@param All players
 //@return player with the best hand
 export const determineWinner = (players) => {
-  let playersRanks = players.map( (player, index) =>
-    PokerEvaluator.evalHand(player.hand.map(card => card.suit.charAt(0) + card.symbol.charAt(0))).value
-  )
+  let playersRanks = players.map( (player, index) => {
+    return PokerEvaluator.evalHand(player.hand.map(card => card.suit.charAt(0) + card.symbol.charAt(0))).value
+  })
   let max = -1;
   for (let i = 0; i < playersRanks.length; i++) {
    if (playersRanks[i] > max)

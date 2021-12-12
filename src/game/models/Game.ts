@@ -65,6 +65,12 @@ export const GameSchema = new Schema({
   },
   intermission: {
     type: Boolean
+  },
+  winner: {
+    type: PlayerSchema
+  }, 
+  gameLog: {
+    type: Array
   }
 });
 
@@ -83,4 +89,6 @@ export interface Game {
   raise: number;
   lobbytimerinit: Date;
   intermission: boolean;
+  winner: Player;
+  gameLog: RoundMove[];
 }

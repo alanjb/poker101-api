@@ -338,10 +338,11 @@ export function initGameRoutes(app: express.Application) {
       const round = game.roundCount;
       const updatedRoundArray = round === 1 ? game.roundOneMoves : game.roundTwoMoves;
       const obj = updateGame(game, playersArray, updatedRoundArray, action, round);
-
+      
       const update = {
         players: playersArray,
         [round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
+        gameLog: obj.gameLog
       };
 
       if (obj.startNextRound) {
@@ -373,25 +374,35 @@ export function initGameRoutes(app: express.Application) {
       const gameController = new GameController();
       const gameId = req.body.params.gameId;
       const game = await gameController.get(gameId);
-      const action = 'call';
-      const round = game.roundCount;
 
       //players cannot call if there has not been a raise
 
+      //player cannot call if they do not have enough money 
+
+      const move = 'call';
       const playersArray = game.players;
+      const intermission = game.intermission;
+      const round = game.roundCount;
       const updatedRoundArray = round === 1 ? game.roundOneMoves : game.roundTwoMoves;
-      const startNextRound = updateGame(game, playersArray, updatedRoundArray, action, round);
+      const obj = updateGame(game, playersArray, updatedRoundArray, move, round, intermission);
 
       const update = {
         players: playersArray,
         [round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
       };
 
-      if (startNextRound) {
+      if (obj.startNextRound) {
         update.roundCount = 2;
       }
 
       const updatedGame = await gameController.updateGame(gameId, update);
+
+      if (!(updatedGame instanceof GameModel)) {
+        console.log("Error: database could not start game: " + updatedGame);
+        return res.json(errorFunction(true, "Error: database could not start game"));
+      }
+
+      console.log('Success: player called');
 
       res.json({
         game: updatedGame
@@ -410,7 +421,6 @@ export function initGameRoutes(app: express.Application) {
       const raise = Number.parseInt(req.body.raise);
       const game = await gameController.get(gameId);
 
-      //commonize this check
       if (!(game instanceof GameModel)) {
         console.log("Error: database could not find game: " + game);
         return res.json(errorFunction(true, "Error: game does not exist"));
@@ -431,9 +441,14 @@ export function initGameRoutes(app: express.Application) {
 
       const move = 'raise';
       const updatedPlayersArray = game.players;
+
       const intermission = game.intermission;
       const round = game.roundCount;
       const updatedRoundArray = round === 1 ? game.roundOneMoves : game.roundTwoMoves;
+
+      console.log('updatedRoundArray')
+      console.log(updatedRoundArray)
+
       const obj = updateGame(game, updatedPlayersArray, updatedRoundArray, move, round, raise, intermission);
 
       const update = {
@@ -441,11 +456,17 @@ export function initGameRoutes(app: express.Application) {
         [round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
         raise: raise,
         pot: Number.parseInt(game.pot) + raise,
-        intermission: obj.intermission
+        intermission: obj.intermission,
+        gameLog: obj.gameLog
       };
 
       if (obj.startNextRound) {
         update.roundCount = 2;
+      }
+
+      if (obj.winner) {
+        update.winner = obj.winner;
+        update.status = 'complete';
       }
 
       const updatedGame = await gameController.updateGame(gameId, update);
@@ -464,40 +485,60 @@ export function initGameRoutes(app: express.Application) {
       });
     }
     catch (error) {
-      console.log('Error: Could not process raise')
+      console.log('Error: Could not process raise \n\n' + error)
       return res.json(errorFunction(true, "Error: There was an issue processing raise"));
     }
   }));
   
   app.put('/api/game/fold', asyncHandler(async (req: any, res: any) => {
     try {
+      const gameController = new GameController();
+      const userController = new UserController();
+      const gameId = req.body.params.gameId;
+      const game = await gameController.get(gameId);
+
+      if (!(game instanceof GameModel)) {
+        console.log("Error: database could not find game: " + game);
+        return res.json(errorFunction(true, "Error: game does not exist"));
+      }
+
+      const move = 'folded';
+      const updatedPlayersArray = game.players;
+      const intermission = game.intermission;
+      const round = game.roundCount;
+      const updatedRoundArray = round === 1 ? game.roundOneMoves : game.roundTwoMoves;
+      const obj = updateGame(game, updatedPlayersArray, updatedRoundArray, move, round, intermission);
+
+      const update = {
+        players: updatedPlayersArray,
+        [round === 1 ? 'roundOneMoves' : 'roundTwoMoves']: updatedRoundArray,
+        intermission: obj.intermission,
+        gameLog: obj.gameLog
+      };
+
+      if (obj.startNextRound) {
+        update.roundCount = 2;
+      }
+
+      const updatedGame = await gameController.updateGame(gameId, update);
+
+      if (!(updatedGame instanceof GameModel)) {
+        console.log("Error: database could not start game: " + updatedGame);
+        return res.json(errorFunction(true, "Error: database could not start game"));
+      }
+
+      console.log('Success: player folded');
+
+      emitUpdatedGame(updatedGame);
+      
+      return res.json({
+        game: updatedGame
+      });
+
+      
     }
     catch (error) {
       console.log('Error: Could not process fold')
-    }
-  }));
-
-  app.put('/api/game/discard', asyncHandler(async (req: any, res: any) => {
-    try {
-    }
-    catch (error) {
-      console.log('Error: Could not process discard')
-    }
-  }));
-
-  app.put('/api/game/complete', asyncHandler(async (req: any, res: any) => {
-    try {
-    }
-    catch (error) {
-      console.log('Error: Could not process complete')
-    }
-  }));
-
-  app.put('/api/game/abort', asyncHandler(async (req: any, res: any) => {
-    try {
-    }
-    catch (error) {
-      console.log('Error: Could not process abort')
     }
   }));
 }

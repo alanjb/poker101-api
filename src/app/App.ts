@@ -61,7 +61,7 @@ class App {
     //helmet
     this.app.use(logger('dev'));
     this.app.use(cors({
-      origin: "http://localhost:3000", // <-- location of the react app were connecting to
+      origin: ["http://localhost:3000,", "https://www.swe681game.net", "https://swe681game.net"],
       credentials: true,
     }
     ));

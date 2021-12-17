@@ -2,35 +2,38 @@ import UserController from '../controllers/UserController';
 import { UserModel } from "../models/User";
 import bcrypt from 'bcryptjs';
 import { errorFunction } from '../../app/config/utils';
+import { SessionTokenModel } from '../models/SessionToken';
+import { v4 as uuidv4 } from 'uuid';
 
 export function initUserRoutes(app, passport) {
   console.log('- Initializing user routes');
 
-  app.post("/api/user/login", (req, res, next) => {
-    const { username, password } = req.body;
-
-    console.log(username)
-    console.log(password)
-
+  app.post("/api/user/login", (req, res, next) => {    
     passport.authenticate("local", (err, user, info) => {
       try {
+        //passport error
         if (err) throw err;
 
+        //user does not exist
         if (!user) {
           console.log("Error: User does not exist");
           return res.json(errorFunction(true, "Error: Invalid username or password"));
         }
 
+        //user does exist, then create/start session 
         if (user) {
-          console.log('Found user...');
+          console.log('Found user...Creating session...');
 
-          req.logIn(user, (err) => {
-            console.log('logging in user: ' + user);
-            if (err) throw err;
-            
-            return res.json({
-              user: user
-            });
+          //create session token
+          const sessionToken = new SessionTokenModel({
+            user: user, 
+            id: uuidv4(), 
+            createDateTime: new Date(),
+            expiredDateTime: null
+          });
+          
+          return res.json({
+            sessionToken: sessionToken.id
           });
         }
       }

@@ -5,9 +5,6 @@ import { Strategy as LocalStrategy } from 'passport-local';
 module.exports = function (passport) {
   passport.use(
     new LocalStrategy((username, password, done) => {
-      console.log('username: ', username);
-      console.log('password: ', password)
-
       UserModel.findOne({ username: username }, (err, user) => {
         if (err) console.error(err);
 

@@ -61,7 +61,7 @@ class App {
     //helmet
     this.app.use(logger('dev'));
     this.app.use(cors({
-      origin: ["http://localhost:3000,", "https://www.swe681game.net", "https://swe681game.net"],
+      origin: ["http://localhost:3000", "https://www.swe681game.net", "https://swe681game.net"],
       credentials: true,
     }
     ));
